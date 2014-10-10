@@ -4,7 +4,7 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
-@Mod(modid = EnkiLib.MODID, name = EnkiLib.MODID, version = EnkiLib.VERSION, acceptableRemoteVersions = "*")
+@Mod(modid = EnkiLib.MODID, name = EnkiLib.NAME, version = EnkiLib.VERSION, acceptableRemoteVersions = "*")
 public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
