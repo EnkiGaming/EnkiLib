@@ -139,7 +139,6 @@ public abstract class FileHandler
      */
     protected abstract void preSave();
 
-    //<editor-fold defaultstate="collapsed" desc="Abstract Methods">
     /**
      * Builds the save file.
      * This method isolates the logic for the construction of the file from the logic for writing to the file, which the handler handles.
@@ -175,7 +174,6 @@ public abstract class FileHandler
      * This should normally be used to flag this fact up on the console, and load default values if applicable.
      */
     protected abstract void onNoFileToInterpret();
-    //</editor-fold>
 
     /**
      * Saves the file.
@@ -328,7 +326,7 @@ public abstract class FileHandler
         }
     }
     
-    void print(String toPrint)
+    public void print(String toPrint)
     {
         if(logger != null)
             logger.info(toPrint);

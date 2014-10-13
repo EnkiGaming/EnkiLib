@@ -35,7 +35,7 @@ public class FileHandlerRegistry
      * Registers a new filehandler.
      * @param handler The handler to register.
      */
-    public void Register(FileHandler handler)
+    public void register(FileHandler handler)
     {
         synchronized(HandlersBusyFlag)
         { Handlers.add(handler); }
@@ -44,13 +44,13 @@ public class FileHandlerRegistry
     /**
      * Saves all registered files.
      */
-    public void Save()
+    public void save()
     {
         synchronized(HandlersBusyFlag)
         {
             synchronized(DataFolderBusyFlag)
             {
-                if(StartSave())
+                if(startSave())
                     for(FileHandler i : Handlers)
                         i.save();
                 else
@@ -63,7 +63,7 @@ public class FileHandlerRegistry
      * Ensures that the plugin directory exists.
      * @return True if the directory existed or was created successfully. Else, false.
      */
-    boolean StartSave()
+    boolean startSave()
     {
         if(!saveFolder.exists())
             return saveFolder.mkdir();
@@ -73,7 +73,7 @@ public class FileHandlerRegistry
     /**
      * Loads all registered files.
      */
-    public void Load()
+    public void load()
     {
         List<FileHandler> HandlersToLoad = new ArrayList<FileHandler>();
         boolean CantLoadAll = false;
