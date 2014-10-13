@@ -74,8 +74,6 @@ public abstract class FileHandler
 
     final List<String> PrerequisiteHandlers = new ArrayList<String>();
     
-
-    //<editor-fold defaultstate="collapsed" desc="Getters/Setters">
     /**
      * Gets the message to be displayed upon establishing that a file's corrupt.
      * @return The aforementioned message.
@@ -135,7 +133,6 @@ public abstract class FileHandler
         synchronized(LoggerBusyFlag)
         { this.logger = logger; }
     }
-    //</editor-fold>
 
     /**
      * Is called to allow any preparation of the file before being loaded to occur.

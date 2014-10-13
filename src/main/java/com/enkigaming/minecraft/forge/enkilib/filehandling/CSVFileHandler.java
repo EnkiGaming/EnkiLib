@@ -176,8 +176,6 @@ public abstract class CSVFileHandler extends FileHandler
     @Override
     protected abstract void postInterpretation();
     
-    
-    
     @Override
     protected void buildSaveFile(PrintWriter writer)
     {
