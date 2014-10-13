@@ -6,6 +6,7 @@ import com.enkigaming.minecraft.forge.enkilib.filehandling.FileHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +98,29 @@ public class UsernameCache
         recordedUsernamesLock.lock();
         
         try
-        { return recordedUsernames.put(playerId, username); }
+        {
+            removeCachedUsername(username);
+            return recordedUsernames.put(playerId, username);
+        }
+        finally
+        { recordedUsernamesLock.unlock(); }
+    }
+    
+    public void removeCachedUsername(String username)
+    {
+        recordedUsernamesLock.lock();
+        
+        try
+        {
+            Collection<UUID> toRemove = new ArrayList<UUID>();
+            
+            for(Map.Entry<UUID, String> entry : recordedUsernames.entrySet())
+                if(username.equalsIgnoreCase(entry.getValue()))
+                    toRemove.add(entry.getKey());
+            
+            for(UUID id : toRemove)
+                recordedUsernames.remove(id);
+        }
         finally
         { recordedUsernamesLock.unlock(); }
     }
