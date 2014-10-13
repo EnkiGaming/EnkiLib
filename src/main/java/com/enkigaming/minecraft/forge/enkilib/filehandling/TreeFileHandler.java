@@ -20,6 +20,13 @@ public abstract class TreeFileHandler extends FileHandler
         public String getName()
         { return name; }
         
+        public String setName(String newName)
+        {
+            String old = name;
+            name = newName;
+            return old;
+        }
+        
         public boolean addMember(TreeMember member)
         { return members.add(member); }
         
