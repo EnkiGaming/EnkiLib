@@ -93,6 +93,22 @@ public class UsernameCache
         { recordedUsernamesLock.unlock(); }
     }
     
+    public UUID getLastRecordedUUIDForName(String username)
+    {
+        recordedUsernamesLock.lock();
+        
+        try
+        {
+            for(Map.Entry<UUID, String> entry : recordedUsernames.entrySet())
+                if(entry.getValue().equalsIgnoreCase(username))
+                    return entry.getKey();
+            
+            return null;
+        }
+        finally
+        { recordedUsernamesLock.unlock(); }
+    }
+    
     public String recordUsername(UUID playerId, String username)
     {
         recordedUsernamesLock.lock();
