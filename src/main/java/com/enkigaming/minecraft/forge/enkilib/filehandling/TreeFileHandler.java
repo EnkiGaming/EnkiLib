@@ -35,6 +35,30 @@ public abstract class TreeFileHandler extends FileHandler
         
         public List<TreeMember> getMembers()
         { return new ArrayList<TreeMember>(members); }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if(obj == null)
+                return false;
+            if(getClass() != obj.getClass())
+                return false;
+            final TreeMember other = (TreeMember) obj;
+            if((this.name == null) ? (other.name != null) : !this.name.equals(other.name))
+                return false;
+            if(this.members != other.members && (this.members == null || !this.members.equals(other.members)))
+                return false;
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 7;
+            hash = 37 * hash + (this.name != null ? this.name.hashCode() : 0);
+            hash = 37 * hash + (this.members != null ? this.members.hashCode() : 0);
+            return hash;
+        }
     }
     
     protected static class NameIndentLevelPair
@@ -53,6 +77,30 @@ public abstract class TreeFileHandler extends FileHandler
         
         public int getIndentLevel()
         { return indentLevel; }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if(obj == null)
+                return false;
+            if(getClass() != obj.getClass())
+                return false;
+            final NameIndentLevelPair other = (NameIndentLevelPair) obj;
+            if((this.name == null) ? (other.name != null) : !this.name.equals(other.name))
+                return false;
+            if(this.indentLevel != other.indentLevel)
+                return false;
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = 17 * hash + (this.name != null ? this.name.hashCode() : 0);
+            hash = 17 * hash + this.indentLevel;
+            return hash;
+        }
     }
     
     protected static class TreeMemberPairListPair
@@ -71,6 +119,30 @@ public abstract class TreeFileHandler extends FileHandler
         
         public List<NameIndentLevelPair> getPairs()
         { return pairs; }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if(obj == null)
+                return false;
+            if(getClass() != obj.getClass())
+                return false;
+            final TreeMemberPairListPair other = (TreeMemberPairListPair) obj;
+            if(this.member != other.member && (this.member == null || !this.member.equals(other.member)))
+                return false;
+            if(this.pairs != other.pairs && (this.pairs == null || !this.pairs.equals(other.pairs)))
+                return false;
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 5;
+            hash = 73 * hash + (this.member != null ? this.member.hashCode() : 0);
+            hash = 73 * hash + (this.pairs != null ? this.pairs.hashCode() : 0);
+            return hash;
+        }
     }
 
     public TreeFileHandler(String handlerId, File file)
