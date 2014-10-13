@@ -191,4 +191,11 @@ public abstract class TreeFileHandler extends FileHandler
 
     @Override
     protected abstract void onNoFileToInterpret();
+    
+    public String setIndentLevelText(String newIndentLevelText)
+    {
+        String old = indentLevelText;
+        indentLevelText = newIndentLevelText;
+        return old;
+    }
 }
