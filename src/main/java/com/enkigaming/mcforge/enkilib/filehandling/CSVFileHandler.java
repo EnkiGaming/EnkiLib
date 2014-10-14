@@ -1,4 +1,4 @@
-package com.enkigaming.minecraft.forge.enkilib.filehandling;
+package com.enkigaming.mcforge.enkilib.filehandling;
 
 // To do: Swap out the CSV-line handling mechanism with a more thorough one.
 

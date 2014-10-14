@@ -1,4 +1,4 @@
-package com.enkigaming.minecraft.forge.enkilib.convenienceclasses;
+package com.enkigaming.mcforge.enkilib.convenienceclasses;
 
 import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;

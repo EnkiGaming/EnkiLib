@@ -1,8 +1,8 @@
-package com.enkigaming.minecraft.forge.enkilib.registry;
+package com.enkigaming.mcforge.enkilib.registry;
 
-import com.enkigaming.minecraft.forge.enkilib.filehandling.CSVFileHandler;
-import com.enkigaming.minecraft.forge.enkilib.filehandling.CSVFileHandler.CSVRowMember;
-import com.enkigaming.minecraft.forge.enkilib.filehandling.FileHandler;
+import com.enkigaming.mcforge.enkilib.filehandling.CSVFileHandler;
+import com.enkigaming.mcforge.enkilib.filehandling.CSVFileHandler.CSVRowMember;
+import com.enkigaming.mcforge.enkilib.filehandling.FileHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;

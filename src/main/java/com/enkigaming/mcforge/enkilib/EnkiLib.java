@@ -1,8 +1,9 @@
-package com.enkigaming.minecraft.forge.enkilib;
+package com.enkigaming.mcforge.enkilib;
 
-import com.enkigaming.minecraft.forge.enkilib.eventhandlers.PlayerLogInForCachingEventHandler;
-import com.enkigaming.minecraft.forge.enkilib.filehandling.FileHandlerRegistry;
-import com.enkigaming.minecraft.forge.enkilib.registry.UsernameCache;
+import com.enkigaming.mcforge.enkilib.eventhandlers.PlayerLogInForCachingEventHandler;
+import com.enkigaming.mcforge.enkilib.eventhandlers.WorldSaveEventHandler;
+import com.enkigaming.mcforge.enkilib.filehandling.FileHandlerRegistry;
+import com.enkigaming.mcforge.enkilib.registry.UsernameCache;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -15,7 +16,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "B1.0";
     
     protected static EnkiLib instance;
     File saveFolder;
@@ -32,6 +33,7 @@ public class EnkiLib
         fileHandling.register(usernameCache.getFileHandler());
         fileHandling.load();
         MinecraftForge.EVENT_BUS.register(new PlayerLogInForCachingEventHandler());
+        MinecraftForge.EVENT_BUS.register(new WorldSaveEventHandler());
         System.out.println("EnkiLib loaded!");
     }
     
@@ -40,4 +42,7 @@ public class EnkiLib
     
     public UsernameCache getUsernameCache()
     { return usernameCache; }
+    
+    public FileHandlerRegistry getFileHandling()
+    { return fileHandling; }
 }

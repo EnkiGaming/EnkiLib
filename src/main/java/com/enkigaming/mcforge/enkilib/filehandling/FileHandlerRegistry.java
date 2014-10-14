@@ -1,4 +1,4 @@
-package com.enkigaming.minecraft.forge.enkilib.filehandling;
+package com.enkigaming.mcforge.enkilib.filehandling;
 
 import java.io.File;
 import java.util.ArrayList;
