@@ -81,6 +81,9 @@ public abstract class CSVFileHandler extends FileHandler
 
         stripEmptyLines(Lines);
 
+        if(Lines.isEmpty())
+            Corrupt = true;
+        
         if(!Lines.get(0).equalsIgnoreCase(getHeader()))
             Corrupt = true;
 
