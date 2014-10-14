@@ -73,6 +73,9 @@ public class UsernameCache
             @Override
             protected List<CSVRowMember> getRow(int rowNumber)
             {
+                if(rowNumber >= entryList.size())
+                    return null;
+                
                 return Arrays.asList(new CSVRowMember(entryList.get(rowNumber).getKey().toString(), false),
                                      new CSVRowMember(entryList.get(rowNumber).getValue(),          true));
             }

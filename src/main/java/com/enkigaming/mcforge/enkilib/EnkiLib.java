@@ -16,7 +16,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "B1.0";
+    public static final String VERSION = "B1.0.0.1";
     
     protected static EnkiLib instance;
     File saveFolder;
