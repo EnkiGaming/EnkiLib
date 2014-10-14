@@ -8,6 +8,8 @@ public class PlayerLogInForCachingEventHandler
 {
     @SubscribeEvent
     public void onPlayerLogIn(PlayerEvent.PlayerLoggedInEvent event)
-    { EnkiLib.getInstance().getUsernameCache().recordUsername(event.player.getGameProfile().getId(),
-                                                              event.player.getGameProfile().getName()); }
+    {
+        EnkiLib.getInstance().getUsernameCache().recordUsername(event.player.getGameProfile().getId(),
+                                                              event.player.getGameProfile().getName());
+    }
 }
