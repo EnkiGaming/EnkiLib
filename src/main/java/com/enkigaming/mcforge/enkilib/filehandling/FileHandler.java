@@ -172,14 +172,10 @@ public abstract class FileHandler
         {
             synchronized(handledFile)
             {
-                if(!handledFile.mkdirs())
-                {
-                    System.out.println("Could not create file for file handler: " + id + ", skipped: ");
-                    System.out.println(handledFile.getPath());
-                    return;
-                }
+                handledFile.mkdirs();
                     
-                if(handledFile.exists()) handledFile.delete();
+                if(handledFile.exists())
+                    handledFile.delete();
 
                 handledFile.createNewFile();
 
@@ -210,46 +206,41 @@ public abstract class FileHandler
             {
                 if(handledFile.exists())
                 {
+                    preInterpretation();
+
+                    DataInputStream input = new DataInputStream(new FileInputStream(handledFile));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+
+                    List<String> lines = new ArrayList<String>();
+
+                    for(String i = ""; i != null; i = reader.readLine())
+                        lines.add(i);
+
                     try
-                    { preInterpretation(); }
+                    {
+                        if(!interpretFile(lines))
+                        {
+                            copyFile(handledFile, new File(handledFile.getParentFile(), appendCorruptedNote(handledFile.getName())));
+                            print(corruptFileMessage);
+                        }
+                    }
                     finally
                     {
-                        DataInputStream input = new DataInputStream(new FileInputStream(handledFile));
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+                        postInterpretation();
 
-                        List<String> lines = new ArrayList<String>();
-
-                        for(String i = ""; i != null; i = reader.readLine())
-                            lines.add(i);
-                        
-                        try
-                        {
-                            if(!interpretFile(lines))
-                            {
-                                copyFile(handledFile, new File(handledFile.getParentFile(), appendCorruptedNote(handledFile.getName())));
-                                print(corruptFileMessage);
-                            }
-                        }
-                        finally
-                        {
-                            postInterpretation();
-                            
-                            input.close();
-                            reader.close();
-                        }
+                        input.close();
+                        reader.close();
                     }
                 }
                 else
                 {
                     try
-                    { preInterpretation(); }
-                    finally
                     {
-                        try
-                        { onNoFileToInterpret(); }
-                        finally
-                        { postInterpretation(); }
+                        preInterpretation();
+                        onNoFileToInterpret();
                     }
+                    finally
+                    { postInterpretation(); }
                 }
             }
         }

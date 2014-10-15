@@ -117,16 +117,16 @@ public abstract class CSVFileHandler extends FileHandler
         return Header;
     }
 
-    void stripEmptyLines(List<String> Lines)
+    void stripEmptyLines(List<String> lines)
     {
         List<String> LinesToRemove = new ArrayList<String>();
 
-        for(String i : Lines)
+        for(String i : lines)
             if(i.trim().equals(""))
                 LinesToRemove.add(i);
 
         for(String i : LinesToRemove)
-            Lines.remove(i);
+            lines.remove(i);
     }
 
     List<String> splitCSVLine(String ToSplit)

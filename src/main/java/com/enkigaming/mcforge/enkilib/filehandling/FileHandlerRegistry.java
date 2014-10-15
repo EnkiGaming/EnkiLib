@@ -1,6 +1,5 @@
 package com.enkigaming.mcforge.enkilib.filehandling;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -53,19 +52,26 @@ public class FileHandlerRegistry
      */
     public void load()
     {
-        Collection<FileHandler> handlersToLoad = new ArrayList<FileHandler>();
+        print("calling load()");
+        
+        Collection<FileHandler> handlersToLoad;
         Collection<String> handlersLoadedIds = new ArrayList<String>();
         
         synchronized(handlers)
         {
             boolean cantLoadAnyMore = false;
+            handlersToLoad = new ArrayList<FileHandler>(handlers);
             
             for(int loadedThisTime = 0; !cantLoadAnyMore && !handlersToLoad.isEmpty(); loadedThisTime = 0)
             {
+                print("Attempt to load file handlers");
+                
                 Collection<FileHandler> notLoadedThisRound = new ArrayList<FileHandler>();
                 
                 for(FileHandler currentHandler : handlersToLoad)
                 {
+                    print("Attempting to load handler: " + currentHandler.getId());
+                    
                     boolean handlerReady = true;
                     Collection<String> currentHandlerPrerequisites = currentHandler.getPrerequisiteHandlerIds();
                     

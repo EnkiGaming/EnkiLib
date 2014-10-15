@@ -9,13 +9,13 @@ import java.util.logging.Logger;
 
 public abstract class TreeFileHandler extends FileHandler
 {
-    public static class TreeMember
+    public static class TreeNode
     {
-        public TreeMember(String name)
+        public TreeNode(String name)
         { this.name = name; }
         
         protected String name;
-        protected List<TreeMember> members = new ArrayList<TreeMember>();
+        protected List<TreeNode> children = new ArrayList<TreeNode>();
         
         public String getName()
         { return name; }
@@ -27,14 +27,14 @@ public abstract class TreeFileHandler extends FileHandler
             return old;
         }
         
-        public boolean addMember(TreeMember member)
-        { return members.add(member); }
+        public boolean addChild(TreeNode member)
+        { return children.add(member); }
         
-        public boolean addMembers(Collection<TreeMember> membersToAdd)
-        { return members.addAll(membersToAdd); }
+        public boolean addChildren(Collection<TreeNode> membersToAdd)
+        { return children.addAll(membersToAdd); }
         
-        public List<TreeMember> getMembers()
-        { return new ArrayList<TreeMember>(members); }
+        public List<TreeNode> getChildren()
+        { return new ArrayList<TreeNode>(children); }
 
         @Override
         public boolean equals(Object obj)
@@ -43,10 +43,10 @@ public abstract class TreeFileHandler extends FileHandler
                 return false;
             if(getClass() != obj.getClass())
                 return false;
-            final TreeMember other = (TreeMember) obj;
+            final TreeNode other = (TreeNode) obj;
             if((this.name == null) ? (other.name != null) : !this.name.equals(other.name))
                 return false;
-            if(this.members != other.members && (this.members == null || !this.members.equals(other.members)))
+            if(this.children != other.children && (this.children == null || !this.children.equals(other.children)))
                 return false;
             return true;
         }
@@ -56,7 +56,7 @@ public abstract class TreeFileHandler extends FileHandler
         {
             int hash = 7;
             hash = 37 * hash + (this.name != null ? this.name.hashCode() : 0);
-            hash = 37 * hash + (this.members != null ? this.members.hashCode() : 0);
+            hash = 37 * hash + (this.children != null ? this.children.hashCode() : 0);
             return hash;
         }
     }
@@ -69,14 +69,20 @@ public abstract class TreeFileHandler extends FileHandler
             this.indentLevel = indentLevel;
         }
         
-        protected final String name;
-        protected final int indentLevel;
+        protected String name;
+        protected int indentLevel;
         
         public String getName()
         { return name; }
         
+        public void setName(String newName)
+        { name = newName; }
+        
         public int getIndentLevel()
         { return indentLevel; }
+        
+        public void setIndentLevel(int newIndentLevel)
+        { indentLevel = newIndentLevel; }
 
         @Override
         public boolean equals(Object obj)
@@ -105,16 +111,16 @@ public abstract class TreeFileHandler extends FileHandler
     
     protected static class TreeMemberPairListPair
     {
-        public TreeMemberPairListPair(TreeMember member, List<NameIndentLevelPair> pairs)
+        public TreeMemberPairListPair(TreeNode member, List<NameIndentLevelPair> pairs)
         {
             this.member = member;
             this.pairs = new ArrayList<NameIndentLevelPair>(pairs);
         }
         
-        protected final TreeMember member;
+        protected final TreeNode member;
         protected final List<NameIndentLevelPair> pairs;
         
-        public TreeMember getMember()
+        public TreeNode getMember()
         { return member; }
         
         public List<NameIndentLevelPair> getPairs()
@@ -165,19 +171,19 @@ public abstract class TreeFileHandler extends FileHandler
     @Override
     protected void buildSaveFile(PrintWriter writer)
     {
-        List<TreeMember> baseMembers = getTreeStructureOfSaveData();
+        List<TreeNode> baseMembers = getTreeStructureOfSaveData();
         
-        for(TreeMember baseMember : baseMembers)
+        for(TreeNode baseMember : baseMembers)
             printMemberAndSubmembers(writer, 0, baseMember);
     }
     
-    protected abstract List<TreeMember> getTreeStructureOfSaveData();
+    protected abstract List<TreeNode> getTreeStructureOfSaveData();
     
-    protected void printMemberAndSubmembers(PrintWriter writer, int indentLevel, TreeMember member)
+    protected void printMemberAndSubmembers(PrintWriter writer, int indentLevel, TreeNode member)
     {
         writer.println(appendIndent(member.getName(), indentLevel));
         
-        for(TreeMember submember : member.getMembers())
+        for(TreeNode submember : member.getChildren())
             printMemberAndSubmembers(writer, indentLevel + 1, submember);
     }
 
@@ -190,6 +196,7 @@ public abstract class TreeFileHandler extends FileHandler
     @Override
     protected boolean interpretFile(List<String> lines)
     {
+        lines = stripEmptyLines(lines);
         List<NameIndentLevelPair> values = new ArrayList<NameIndentLevelPair>();
         
         for(String line : lines)
@@ -202,49 +209,66 @@ public abstract class TreeFileHandler extends FileHandler
     
     protected void fixLevels(List<NameIndentLevelPair> values)
     {
-        int currentLevelShouldBeAtMost = 0;
+        int currentMaxIndent = 0;
         
         for(int i = 0; i < values.size(); i++)
         {
-            if(values.get(i).getIndentLevel() > currentLevelShouldBeAtMost)
-                values.set(i, new NameIndentLevelPair(appendIndent(values.get(i).getName(),
-                                                                   values.get(i).getIndentLevel() - currentLevelShouldBeAtMost),
-                                                      currentLevelShouldBeAtMost));
+            NameIndentLevelPair current = values.get(i);
+            boolean done = false;
             
-            currentLevelShouldBeAtMost = values.get(i).getIndentLevel() + 1;
+            for(int j = 0; j <= currentMaxIndent && !done; j++)
+            {
+                if(current.getName().startsWith(indentLevelText))
+                {
+                    current.setName(current.getName().substring(indentLevelText.length()));
+                    current.setIndentLevel(current.getIndentLevel() + 1);
+                }
+                else
+                    done = true;
+            }
+            
+            currentMaxIndent = current.getIndentLevel() + 1;
         }
     }
     
-    protected abstract boolean interpretTree(List<TreeMember> tree);
-    
-    protected List<TreeMember> getTree(List<NameIndentLevelPair> values)
+    List<String> stripEmptyLines(List<String> lines)
     {
-        List<TreeMember> returnTreeMembers = new ArrayList<TreeMember>();
-        List<TreeMemberPairListPair> pairs = new ArrayList<TreeMemberPairListPair>();
-        int indentLevel = values.get(0).getIndentLevel();
+        List<String> linesToKeep = new ArrayList<String>();
+
+        for(int i = 0; i < lines.size(); i++)
+            if(!lines.get(i).trim().isEmpty())
+                linesToKeep.add(lines.get(i));
+        return linesToKeep;
+    }
+    
+    protected abstract boolean interpretTree(List<TreeNode> tree);
+    
+    protected List<TreeNode> getTree(List<NameIndentLevelPair> values)
+    {
+        TreeNode baseNode = new TreeNode("This should never appear.");
         
-        TreeMember currentTreeMember = new TreeMember(values.get(0).getName());
-        List<NameIndentLevelPair> currentPairs = new ArrayList<NameIndentLevelPair>();
+        List<TreeNode> currentHierarchy = new ArrayList<TreeNode>();
+        currentHierarchy.add(baseNode);
         
-        for(int i = 1; i < values.size(); i++)
+        for(int i = 0; i < values.size(); i++)
         {
-            if(values.get(i).getIndentLevel() <= indentLevel)
+            boolean assigned = false;
+            
+            while(!assigned)
             {
-                pairs.add(new TreeMemberPairListPair(currentTreeMember, currentPairs));
-                currentTreeMember = new TreeMember(values.get(i).getName());
-                currentPairs = new ArrayList<NameIndentLevelPair>();
+                if(values.get(i).getIndentLevel() >= currentHierarchy.size() - 1)
+                {
+                    TreeNode node = new TreeNode(values.get(i).getName());
+                    currentHierarchy.get(currentHierarchy.size() - 1).addChild(node);
+                    currentHierarchy.add(node);
+                    assigned = true;
+                }
+                else
+                    currentHierarchy.remove(currentHierarchy.size() - 1);
             }
-            else
-                currentPairs.add(values.get(i));
         }
         
-        for(TreeMemberPairListPair pair : pairs)
-        {
-            pair.getMember().addMembers(getTree(pair.getPairs()));
-            returnTreeMembers.add(pair.getMember());
-        }
-        
-        return returnTreeMembers;
+        return baseNode.getChildren();
     }
     
     protected String appendIndent(String string, int indentLevelToAppend)
