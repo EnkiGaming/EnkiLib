@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -31,24 +32,24 @@ public abstract class FileHandler
      * The constructor. File corrupted message is generated using the file name.
      * @param file The file this handler should write to and read from.
      */
-    public FileHandler(String HandlerID, File file)
-    { this(HandlerID, file, null, "File Corrupted: " + file.getName()); }
+    public FileHandler(String handlerID, File file)
+    { this(handlerID, file, null, "File Corrupted: " + file.getName()); }
 
     /**
      * The constructor.
      * @param file The file this handler should write to and read from.
      * @param CorruptFileMessage The message to be displayed upon establishing that a file's corrupt.
      */
-    public FileHandler(String HandlerID, File file, String CorruptFileMessage)
-    { this(HandlerID, file, null, CorruptFileMessage); }
+    public FileHandler(String handlerID, File file, String corruptFileMessage)
+    { this(handlerID, file, null, corruptFileMessage); }
 
     /**
      * The constructor. File corrupted message is generated using the file name.
      * @param file The file this handler should write to and read from.
      * @param logger The logger that messages should be sent to.
      */
-    public FileHandler(String HandlerID, File file, Logger logger)
-    { this(HandlerID, file, logger, "File Corrupted: " + file.getName()); }
+    public FileHandler(String handlerID, File file, Logger logger)
+    { this(handlerID, file, logger, "File Corrupted: " + file.getName()); }
 
     /**
      * The constructor.
@@ -56,35 +57,33 @@ public abstract class FileHandler
      * @param logger The logger that messages should be sent to.
      * @param CorruptFileMessage The message to be displayed upon establishing that a file's corrupt.
      */
-    public FileHandler(String HandlerID, File file, Logger logger, String CorruptFileMessage)
+    public FileHandler(String handlerID, File file, Logger logger, String corruptFileMessage)
     {
-        ID = HandlerID;
-        HandledFile = file;
+        id = handlerID;
+        handledFile = file;
         this.logger = logger;
-        this.CorruptFileMessage = CorruptFileMessage;
+        this.corruptFileMessage = corruptFileMessage;
     }
 
 
-    String ID;
-    File HandledFile;
-    String CorruptFileMessage;
+    final String id;
+    final File handledFile;
+    String corruptFileMessage;
     Logger logger;
 
-    final Object FileBusyFlag = new Object();
-    final Object CorruptFileMessageBusyFlag = new Object();
-    final Object LoggerBusyFlag = new Object();
+    final Object fileBusy = new Object();
 
-    final List<String> PrerequisiteHandlers = new ArrayList<String>();
+    final List<String> prerequisiteHandlers = new ArrayList<String>();
+    
+    public String getId()
+    { return id; }
     
     /**
      * Gets the message to be displayed upon establishing that a file's corrupt.
      * @return The aforementioned message.
      */
     public String getCorruptFileMessage()
-    {
-        synchronized(CorruptFileMessageBusyFlag)
-        { return CorruptFileMessage; }
-    }
+    { return corruptFileMessage; }
 
     /**
      * Gets the file this handler reads or writes to.
@@ -92,8 +91,8 @@ public abstract class FileHandler
      */
     public File getFile()
     {
-        synchronized(FileBusyFlag)
-        { return HandledFile; }
+        synchronized(fileBusy)
+        { return handledFile; }
     }
 
     /**
@@ -101,9 +100,12 @@ public abstract class FileHandler
      * @return The aforementioned logger.
      */
     public Logger getLogger()
+    { return logger; }
+    
+    public Collection<String> getPrerequisiteHandlerIds()
     {
-        synchronized(LoggerBusyFlag)
-        { return logger; }
+        synchronized(prerequisiteHandlers)
+        { return new ArrayList<String>(prerequisiteHandlers); }
     }
 
     /**
@@ -111,30 +113,14 @@ public abstract class FileHandler
      * @param cfm The aforementioned message.
      */
     public void setCorruptFileMessage(String cfm)
-    {
-        synchronized(CorruptFileMessageBusyFlag)
-        { CorruptFileMessage = cfm; }
-    }
-
-    /**
-     * Sets the file this handler reads or writes to.
-     * @param file The aforementioned file.
-     */
-    public void setFile(File file)
-    {
-        synchronized(FileBusyFlag)
-        { HandledFile = file; }
-    }
+    { corruptFileMessage = cfm; }
 
     /**
      * Sets the logger that should be used for sending messages.
      * @param logger The aforementioned logger.
      */
     public void setLogger(Logger logger)
-    {
-        synchronized(LoggerBusyFlag)
-        { this.logger = logger; }
-    }
+    { this.logger = logger; }
 
     /**
      * Is called to allow any preparation of the file before being loaded to occur.
@@ -164,7 +150,7 @@ public abstract class FileHandler
      * @param Lines The contents of the file, with each line split up into a different string.
      * @return True if file loads flawlessly. False if the file is corrupted.
      */
-    protected abstract boolean interpretFile(List<String> Lines);
+    protected abstract boolean interpretFile(List<String> lines);
 
     /**
      * Is called to allow any cleaning-up of the file being loaded to occur.
@@ -184,14 +170,20 @@ public abstract class FileHandler
     {
         try
         {
-            synchronized(FileBusyFlag)
+            synchronized(handledFile)
             {
-                HandledFile.mkdirs();
-                if(HandledFile.exists()) HandledFile.delete();
+                if(!handledFile.mkdirs())
+                {
+                    System.out.println("Could not create file for file handler: " + id + ", skipped: ");
+                    System.out.println(handledFile.getPath());
+                    return;
+                }
+                    
+                if(handledFile.exists()) handledFile.delete();
 
-                HandledFile.createNewFile();
+                handledFile.createNewFile();
 
-                FileWriter fw = new FileWriter(HandledFile, true);
+                FileWriter fw = new FileWriter(handledFile, true);
                 PrintWriter pw = new PrintWriter(fw);
 
                 preSave();
@@ -203,8 +195,8 @@ public abstract class FileHandler
                 fw.close();
             }
         }
-        catch(IOException e)
-        { e.printStackTrace(); }
+        catch(IOException exception)
+        { exception.printStackTrace(); }
     }
 
     /**
@@ -212,63 +204,70 @@ public abstract class FileHandler
      */
     public void load()
     {
-        synchronized(FileBusyFlag)
+        try
         {
-            if(HandledFile.exists())
+            synchronized(handledFile)
             {
-                try
+                if(handledFile.exists())
                 {
-                    DataInputStream input = new DataInputStream(new FileInputStream(HandledFile));
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-
-                    List<String> Lines = new ArrayList<String>();
-
-                    for(String i = ""; i != null; i = reader.readLine())
-                        Lines.add(i);
                     try
-                    {
-                        if(!interpretFile(Lines))
-                        {
-                            copyFile(HandledFile, new File(HandledFile.getParentFile(), appendCorruptedNote(HandledFile.getName())));
-                            synchronized(LoggerBusyFlag)
-                            {
-                                synchronized(CorruptFileMessageBusyFlag)
-                                { print(CorruptFileMessage); }
-                            }
-                        }
-                    }
+                    { preInterpretation(); }
                     finally
                     {
-                        postInterpretation();
+                        DataInputStream input = new DataInputStream(new FileInputStream(handledFile));
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-                        reader.close();
-                        input.close();
+                        List<String> lines = new ArrayList<String>();
+
+                        for(String i = ""; i != null; i = reader.readLine())
+                            lines.add(i);
+                        
+                        try
+                        {
+                            if(!interpretFile(lines))
+                            {
+                                copyFile(handledFile, new File(handledFile.getParentFile(), appendCorruptedNote(handledFile.getName())));
+                                print(corruptFileMessage);
+                            }
+                        }
+                        finally
+                        {
+                            postInterpretation();
+                            
+                            input.close();
+                            reader.close();
+                        }
                     }
                 }
-                catch(IOException e)
-                { e.printStackTrace(); }
-            }
-            else
-            {
-                try
-                { onNoFileToInterpret(); }
-                finally
-                { postInterpretation(); }
+                else
+                {
+                    try
+                    { preInterpretation(); }
+                    finally
+                    {
+                        try
+                        { onNoFileToInterpret(); }
+                        finally
+                        { postInterpretation(); }
+                    }
+                }
             }
         }
+        catch(IOException exception)
+        { exception.printStackTrace(); }
     }
 
     /**
      * Specifies that this filehandler should only ever load after another has already loaded.
      * @param HandlerID The ID of the filehandler to load after.
      */
-    public void mustLoadAfterHandler(String HandlerID)
+    public void mustLoadAfterHandler(String handlerId)
     {
-        if(HandlerID != null)
-            synchronized(PrerequisiteHandlers)
-            { PrerequisiteHandlers.add(HandlerID); }
-        else
-            throw new IllegalArgumentException("MustLoadAfterHandler(String) requires a non-null string as the handler ID.");
+        if(handlerId == null)
+            throw new IllegalArgumentException("handlerId cannot be null");
+        
+        synchronized(prerequisiteHandlers)
+        { prerequisiteHandlers.add(handlerId); }
     }
 
     /**
@@ -276,13 +275,13 @@ public abstract class FileHandler
      * @param FileName The file-name to add the tag to.
      * @return The file-name with the tag appended.
      */
-    String appendCorruptedNote(String FileName)
+    String appendCorruptedNote(String fileName)
     {
         Date now = new Date();
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH|mm|ss");
         String CorruptedNote = " (Corrupted " + format.format(now) + ")";
 
-        String[] FileNameParts = HandledFile.getName().split("\\.");
+        String[] FileNameParts = handledFile.getName().split("\\.");
 
         if(FileNameParts.length > 1)
         {

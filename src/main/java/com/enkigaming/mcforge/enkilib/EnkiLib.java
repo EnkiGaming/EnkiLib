@@ -16,7 +16,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "B1.0.0.3";
+    public static final String VERSION = "B1.0.0.4";
     
     protected static EnkiLib instance;
     File saveFolder;
@@ -28,7 +28,7 @@ public class EnkiLib
     {
         instance = this;
         saveFolder = new File(event.getModConfigurationDirectory().getParentFile(), "plugins/EnkiCore");
-        fileHandling = new FileHandlerRegistry(saveFolder, null);
+        fileHandling = new FileHandlerRegistry();
         usernameCache = new UsernameCache(saveFolder);
         fileHandling.register(usernameCache.getFileHandler());
         fileHandling.load();

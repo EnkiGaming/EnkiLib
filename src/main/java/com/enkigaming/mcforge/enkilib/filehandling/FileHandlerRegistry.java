@@ -2,6 +2,7 @@ package com.enkigaming.mcforge.enkilib.filehandling;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -16,20 +17,14 @@ public class FileHandlerRegistry
      * Constructs the filehandler registry.
      * @param plugin The bukkit plugin this handles the file handlers for.
      */
-    public FileHandlerRegistry(File saveFolder, Logger logger)
-    {
-        this.logger = logger;
-        Handlers = new ArrayList<FileHandler>();
-        this.saveFolder = saveFolder;
-    }
+    public FileHandlerRegistry(Logger logger)
+    { this.logger = logger; }
     
-    List<FileHandler> Handlers;
+    public FileHandlerRegistry()
+    { this(null); }
+    
+    final List<FileHandler> handlers = new ArrayList<FileHandler>();
     Logger logger;
-    File saveFolder;
-
-    final Object HandlersBusyFlag = new Object();
-    final Object DataFolderBusyFlag = new Object();
-
 
     /**
      * Registers a new filehandler.
@@ -37,8 +32,8 @@ public class FileHandlerRegistry
      */
     public void register(FileHandler handler)
     {
-        synchronized(HandlersBusyFlag)
-        { Handlers.add(handler); }
+        synchronized(handlers)
+        { handlers.add(handler); }
     }
 
     /**
@@ -46,97 +41,72 @@ public class FileHandlerRegistry
      */
     public void save()
     {
-        synchronized(HandlersBusyFlag)
+        synchronized(handlers)
         {
-            synchronized(DataFolderBusyFlag)
-            {
-                if(startSave())
-                    for(FileHandler i : Handlers)
-                        i.save();
-                else
-                    print("Save failed - Cannot create plugin directory.");
-            }
+            for(FileHandler handler : handlers)
+                handler.save();
         }
     }
-
-    /**
-     * Ensures that the plugin directory exists.
-     * @return True if the directory existed or was created successfully. Else, false.
-     */
-    boolean startSave()
-    {
-        if(!saveFolder.exists())
-            return saveFolder.mkdir();
-        else return true;
-    }
-
+    
     /**
      * Loads all registered files.
      */
     public void load()
     {
-        List<FileHandler> HandlersToLoad = new ArrayList<FileHandler>();
-        boolean CantLoadAll = false;
-
-        synchronized(HandlersBusyFlag)
+        Collection<FileHandler> handlersToLoad = new ArrayList<FileHandler>();
+        Collection<String> handlersLoadedIds = new ArrayList<String>();
+        
+        synchronized(handlers)
         {
-            HandlersToLoad.addAll(Handlers);
-
-            synchronized(DataFolderBusyFlag)
+            boolean cantLoadAnyMore = false;
+            
+            for(int loadedThisTime = 0; !cantLoadAnyMore && !handlersToLoad.isEmpty(); loadedThisTime = 0)
             {
-                saveFolder.mkdirs();
-
-                List<String> HandlersLoaded = new ArrayList<String>();
-                CantLoadAll = false;
-
-                for(FileHandler i : HandlersToLoad)
-                    i.preInterpretation();
-
-                while(HandlersToLoad.size() > 0 && !CantLoadAll)
+                Collection<FileHandler> notLoadedThisRound = new ArrayList<FileHandler>();
+                
+                for(FileHandler currentHandler : handlersToLoad)
                 {
-                    List<FileHandler> LoadedThisRound = new ArrayList<FileHandler>();
-
-                    for(FileHandler i : HandlersToLoad)
+                    boolean handlerReady = true;
+                    Collection<String> currentHandlerPrerequisites = currentHandler.getPrerequisiteHandlerIds();
+                    
+                    if(!currentHandlerPrerequisites.isEmpty())
+                        for(String prerequisite : currentHandlerPrerequisites)
+                            if(!handlersLoadedIds.contains(prerequisite))
+                                handlerReady = false;
+                    
+                    if(handlerReady)
                     {
-                        boolean HandlerReady = true;
-
-                        if(i.PrerequisiteHandlers.size() > 0)
-                        {
-                            for(int j = 0; j < i.PrerequisiteHandlers.size() && HandlerReady; j++)
-                            {
-                                boolean PrerequisiteLoaded = false;
-
-                                for(int k = 0; k < HandlersLoaded.size() && !PrerequisiteLoaded; k++)
-                                    if(HandlersLoaded.get(k).equalsIgnoreCase(i.PrerequisiteHandlers.get(j)))
-                                        PrerequisiteLoaded = true;
-
-                                if(!PrerequisiteLoaded)
-                                    HandlerReady = false;
-                            }
-                        }
-
-                        if(HandlerReady)
-                        {
-                            i.load();
-                            LoadedThisRound.add(i);
-                            HandlersLoaded.add(i.ID);
-                        }
+                        currentHandler.load();
+                        loadedThisTime++;
+                        handlersLoadedIds.add(currentHandler.getId());
                     }
-
-                    for(FileHandler i : LoadedThisRound)
-                        HandlersToLoad.remove(i);
-
-                    if(LoadedThisRound.size() <= 0 && HandlersToLoad.size() > 0)
-                        CantLoadAll = true;
+                    else
+                        notLoadedThisRound.add(currentHandler);
                 }
+                
+                if(loadedThisTime == 0)
+                    cantLoadAnyMore = true;
+                
+                handlersToLoad = notLoadedThisRound;
             }
         }
-
-        if(CantLoadAll)
-            print("Cannot load all filehandlers; some require filehandlers that aren't registered, or a circular requirement exists.");
-
-          // Original version. Oh, times were so much simpler back then ...
-//        for(FileHandler i : Handlers)
+        
+        if(!handlersToLoad.isEmpty())
+        {
+            String failedToLoad = "";
+            
+            for(FileHandler handler : handlersToLoad)
+                failedToLoad += handler.getId() + ", ";
+            
+            if(failedToLoad.equalsIgnoreCase(""))
+                failedToLoad = failedToLoad.substring(0, failedToLoad.length() - 2);
+            
+            print("The following file handlers could not be loaded due to missing handlers or circular prerequisites: ");
+            print(failedToLoad);
+        }
+        
+        // Original version. Oh, times were so much simpler back then ...
+//        for(FileHandler i : handlers)
 //            i.load();
     }
     
