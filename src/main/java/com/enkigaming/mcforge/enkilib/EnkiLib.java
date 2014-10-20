@@ -9,6 +9,7 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import java.io.File;
+import java.util.UUID;
 import net.minecraftforge.common.MinecraftForge;
 
 @Mod(modid = EnkiLib.MODID, name = EnkiLib.NAME, version = EnkiLib.VERSION, acceptableRemoteVersions = "*")
@@ -16,7 +17,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "B1.0.1";
+    public static final String VERSION = "B1.0.2";
     
     protected static EnkiLib instance;
     File saveFolder;
@@ -45,4 +46,9 @@ public class EnkiLib
     
     public FileHandlerRegistry getFileHandling()
     { return fileHandling; }
+    
+    //========== Convenience Methods ==========
+    
+    public static String getLastRecordedNameOf(UUID playerId)
+    { return getInstance().getUsernameCache().getLastRecordedNameOf(playerId); }
 }
