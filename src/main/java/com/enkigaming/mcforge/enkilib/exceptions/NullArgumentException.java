@@ -1,4 +1,4 @@
-package com.enkigaming.mcforge.enkilib.eventlisteners;
+package com.enkigaming.mcforge.enkilib.exceptions;
 
 /**
  * Exception thrown when null is passed as an argument where a null argument is illegal.
