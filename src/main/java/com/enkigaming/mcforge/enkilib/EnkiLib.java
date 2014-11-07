@@ -1,7 +1,7 @@
 package com.enkigaming.mcforge.enkilib;
 
-import com.enkigaming.mcforge.enkilib.eventhandlers.PlayerLogInForCachingEventHandler;
-import com.enkigaming.mcforge.enkilib.eventhandlers.WorldSaveEventHandler;
+import com.enkigaming.mcforge.enkilib.eventlisteners.PlayerLogInForCachingEventListener;
+import com.enkigaming.mcforge.enkilib.eventlisteners.WorldSaveEventListener;
 import com.enkigaming.mcforge.enkilib.filehandling.FileHandlerRegistry;
 import com.enkigaming.mcforge.enkilib.registry.UsernameCache;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -17,7 +17,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "B1.0.2";
+    public static final String VERSION = "B1.0.3";
     
     protected static EnkiLib instance;
     File saveFolder;
@@ -33,8 +33,8 @@ public class EnkiLib
         usernameCache = new UsernameCache(saveFolder);
         fileHandling.register(usernameCache.getFileHandler());
         fileHandling.load();
-        FMLCommonHandler.instance().bus().register(new PlayerLogInForCachingEventHandler());
-        MinecraftForge.EVENT_BUS.register(new WorldSaveEventHandler());
+        FMLCommonHandler.instance().bus().register(new PlayerLogInForCachingEventListener());
+        MinecraftForge.EVENT_BUS.register(new WorldSaveEventListener());
         System.out.println("EnkiLib loaded!");
     }
     
