@@ -1,8 +1,8 @@
-package com.enkigaming.mcforge.enkilib.registry;
+package com.enkigaming.mcforge.lib.registry;
 
-import com.enkigaming.mcforge.enkilib.filehandling.CSVFileHandler;
-import com.enkigaming.mcforge.enkilib.filehandling.CSVFileHandler.CSVRowMember;
-import com.enkigaming.mcforge.enkilib.filehandling.FileHandler;
+import com.enkigaming.lib.filehandling.CSVFileHandler;
+import com.enkigaming.lib.filehandling.CSVFileHandler.CSVRowMember;
+import com.enkigaming.lib.filehandling.FileHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,7 +96,7 @@ public class UsernameCache
         { recordedUsernamesLock.unlock(); }
     }
     
-    public UUID getLastRecordedUUIDForName(String username)
+    public UUID getLastRecordedIDForName(String username)
     {
         recordedUsernamesLock.lock();
         

@@ -1,4 +1,4 @@
-package com.enkigaming.mcforge.enkilib.filehandling;
+package com.enkigaming.lib.filehandling;
 
 import java.io.File;
 import java.io.PrintWriter;

@@ -1,4 +1,4 @@
-package com.enkigaming.mcforge.enkilib.exceptions;
+package com.enkigaming.lib.exceptions;
 
 public class UnableToParseException extends Exception
 {

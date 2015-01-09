@@ -1,4 +1,4 @@
-package com.enkigaming.mcforge.enkilib.filehandling;
+package com.enkigaming.lib.filehandling;
 
 // To do: Swap out the CSV-line handling mechanism with a more thorough one.
 
@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 // To do: Check Javadoc.
 
 /**
- * Generic comma-separated-value file handler. (specific to bukkit)
+ * Generic comma-separated-value file handler.
  * Takes a file and automates the process of writing to the file as well as the
  * logic required to format that file as a CSV file.
  * @author Hanii Puppy <hanii.puppy@googlemail.com>

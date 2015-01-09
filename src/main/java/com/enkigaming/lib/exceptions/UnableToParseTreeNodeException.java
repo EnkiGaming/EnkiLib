@@ -1,6 +1,6 @@
-package com.enkigaming.mcforge.enkilib.exceptions;
+package com.enkigaming.lib.exceptions;
 
-import com.enkigaming.mcforge.enkilib.filehandling.TreeFileHandler.TreeNode;
+import com.enkigaming.lib.filehandling.TreeFileHandler.TreeNode;
 
 public class UnableToParseTreeNodeException extends UnableToParseException
 {

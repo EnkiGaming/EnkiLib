@@ -1,4 +1,4 @@
-package com.enkigaming.mcforge.enkilib.filehandling;
+package com.enkigaming.lib.filehandling;
 
 // VLS = Variable Length Sets. Pretty much sums up the filetype.
 

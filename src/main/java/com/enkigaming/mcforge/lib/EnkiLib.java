@@ -1,9 +1,9 @@
-package com.enkigaming.mcforge.enkilib;
+package com.enkigaming.mcforge.lib;
 
-import com.enkigaming.mcforge.enkilib.eventlisteners.PlayerLogInForCachingEventListener;
-import com.enkigaming.mcforge.enkilib.eventlisteners.WorldSaveEventListener;
-import com.enkigaming.mcforge.enkilib.filehandling.FileHandlerRegistry;
-import com.enkigaming.mcforge.enkilib.registry.UsernameCache;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerLogInForCachingEventListener;
+import com.enkigaming.mcforge.lib.eventlisteners.WorldSaveEventListener;
+import com.enkigaming.lib.filehandling.FileHandlerRegistry;
+import com.enkigaming.mcforge.lib.registry.UsernameCache;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
@@ -28,7 +28,7 @@ public class EnkiLib
     public void preInit(FMLPreInitializationEvent event)
     {
         instance = this;
-        saveFolder = new File(event.getModConfigurationDirectory().getParentFile(), "plugins/EnkiCore");
+        saveFolder = new File(event.getModConfigurationDirectory().getParentFile(), "plugins/EnkiLib");
         fileHandling = new FileHandlerRegistry();
         usernameCache = new UsernameCache(saveFolder);
         fileHandling.register(usernameCache.getFileHandler());
@@ -51,4 +51,7 @@ public class EnkiLib
     
     public static String getLastRecordedNameOf(UUID playerId)
     { return getInstance().getUsernameCache().getLastRecordedNameOf(playerId); }
+    
+    public static UUID getLastRecordedIDForName(String username)
+    { return getInstance().getUsernameCache().getLastRecordedIDForName(username); }
 }

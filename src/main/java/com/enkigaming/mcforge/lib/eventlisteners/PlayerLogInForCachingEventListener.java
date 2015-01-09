@@ -1,6 +1,6 @@
-package com.enkigaming.mcforge.enkilib.eventlisteners;
+package com.enkigaming.mcforge.lib.eventlisteners;
 
-import com.enkigaming.mcforge.enkilib.EnkiLib;
+import com.enkigaming.mcforge.lib.EnkiLib;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 

@@ -1,4 +1,4 @@
-package com.enkigaming.mcforge.enkilib.filehandling;
+package com.enkigaming.lib.filehandling;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
