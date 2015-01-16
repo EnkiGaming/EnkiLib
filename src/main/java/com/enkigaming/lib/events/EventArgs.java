@@ -179,7 +179,7 @@ public interface EventArgs
     /**
      * Gets the eventargs object that this was ultimately generated from. That is, the parent args if they weren't
      * generated from another, or their parent args if they were, and so on.
-     * @return The master eventargs object for this hierarchy, or null if this wasn't generated from another eventargs
+     * @return The master eventargs object for this hierarchy, or itself if this wasn't generated from another eventargs
      * object.
      */
     EventArgs getMasterArgs();

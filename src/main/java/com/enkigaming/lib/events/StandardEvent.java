@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-public class HaniiEvent<T extends EventArgs> implements Event<T>
+public class StandardEvent<T extends EventArgs> implements Event<T>
 {
     final List<EventListener<T>> listeners = new ArrayList<EventListener<T>>();
     

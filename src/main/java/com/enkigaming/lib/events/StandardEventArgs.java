@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
-public class HaniiEventArgs implements EventArgs
+public class StandardEventArgs implements EventArgs
 {
     protected enum Status
     {
@@ -219,7 +219,7 @@ public class HaniiEventArgs implements EventArgs
         synchronized(parentArgsBusy)
         {
             if(parentArgs == null)
-                return null;
+                return this;
             
             if(parentArgs.getParentArgs() == null)
                 return parentArgs;
@@ -337,19 +337,19 @@ public class HaniiEventArgs implements EventArgs
         {
             @Override
             public void markAsUsingPreEvent()
-            { HaniiEventArgs.this.markAsUsingPreEvent(); }
+            { StandardEventArgs.this.markAsUsingPreEvent(); }
 
             @Override
             public void markAsUsedPreEvent()
-            { HaniiEventArgs.this.markAsUsedPreEvent(); }
+            { StandardEventArgs.this.markAsUsedPreEvent(); }
 
             @Override
             public void markAsUsingPostEvent()
-            { HaniiEventArgs.this.markAsUsingPostEvent(); }
+            { StandardEventArgs.this.markAsUsingPostEvent(); }
 
             @Override
             public void markAsUsedPostEvent()
-            { HaniiEventArgs.this.markAsUsedPostEvent(); }
+            { StandardEventArgs.this.markAsUsedPostEvent(); }
 
             @Override
             public void setEvent(Event<? extends EventArgs> event)
@@ -357,35 +357,35 @@ public class HaniiEventArgs implements EventArgs
 
             @Override
             public void setParentArgs(EventArgs args)
-            { HaniiEventArgs.this.setParentArgs(args); }
+            { StandardEventArgs.this.setParentArgs(args); }
 
             @Override
             public void makeImmutable()
-            { HaniiEventArgs.this.makeImmutable(); }
+            { StandardEventArgs.this.makeImmutable(); }
 
             @Override
             public void addDependentArgs(EventArgs args)
-            { HaniiEventArgs.this.addDependentArgs(args); }
+            { StandardEventArgs.this.addDependentArgs(args); }
 
             @Override
             public void addRelatedMasterArgs(EventArgs args)
-            { HaniiEventArgs.this.addRelatedMasterArgs(args); }
+            { StandardEventArgs.this.addRelatedMasterArgs(args); }
 
             @Override
             public void addRelatedMasterArgs(EventArgs... args)
-            { HaniiEventArgs.this.addRelatedMasterArgs(args); }
+            { StandardEventArgs.this.addRelatedMasterArgs(args); }
 
             @Override
             public void addRelatedMasterArgs(Collection<? extends EventArgs> args)
-            { HaniiEventArgs.this.addRelatedMasterArgs(args); }
+            { StandardEventArgs.this.addRelatedMasterArgs(args); }
 
             @Override
             public void setListenerQueue(Queue<ListenerArgsPairing> listenerQueue)
-            { HaniiEventArgs.this.setListenerQueue(listenerQueue); }
+            { StandardEventArgs.this.setListenerQueue(listenerQueue); }
 
             @Override
             public Queue<ListenerArgsPairing> getListenerQueue()
-            { return HaniiEventArgs.this.getListenerQueue(); }
+            { return StandardEventArgs.this.getListenerQueue(); }
         };
     }
     
