@@ -1,12 +1,15 @@
 package com.enkigaming.lib.events;
 
 import com.enkigaming.lib.collections.CollectionMethods;
+import com.enkigaming.lib.events.exceptions.EventArgsFinishedBeforeStartedException;
 import com.enkigaming.lib.events.exceptions.EventArgsModifiedWhenImmutableException;
+import com.enkigaming.lib.events.exceptions.EventArgsStateException;
+import com.enkigaming.lib.events.exceptions.EventArgsUsedPostBeforePreException;
 import org.junit.Test;
-import com.enkigaming.lib.testing.ExceptionAssertion;
-import org.apache.commons.lang3.NotImplementedException;
+import com.enkigaming.lib.testing.ThrowableAssertion;
 import static org.junit.Assert.*;
 import static com.enkigaming.lib.testing.Assert.*;
+import com.enkigaming.lib.testing.NoThrowableAssertion;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,14 +43,14 @@ public abstract class EventArgsTestBasic
         
         assertFalse("10", args.isCancelled());
         
-        new ExceptionAssertion("11", EventArgsModifiedWhenImmutableException.class)
+        new ThrowableAssertion("11", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
             { args.setCancelled(true); }
         };
         
-        new ExceptionAssertion("12", EventArgsModifiedWhenImmutableException.class)
+        new ThrowableAssertion("12", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
@@ -64,14 +67,14 @@ public abstract class EventArgsTestBasic
         
         assertTrue("15", args.isCancelled());
         
-        new ExceptionAssertion("16", EventArgsModifiedWhenImmutableException.class)
+        new ThrowableAssertion("16", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
             { args.setCancelled(true); }
         };
         
-        new ExceptionAssertion("17", EventArgsModifiedWhenImmutableException.class)
+        new ThrowableAssertion("17", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
@@ -102,7 +105,7 @@ public abstract class EventArgsTestBasic
         
         assertFalse("7", args.isCancelled());
         
-        new ExceptionAssertion("8", EventArgsModifiedWhenImmutableException.class)
+        new ThrowableAssertion("8", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
@@ -111,7 +114,7 @@ public abstract class EventArgsTestBasic
         
         assertFalse("9", args.isCancelled());
         
-        new ExceptionAssertion("10", EventArgsModifiedWhenImmutableException.class)
+        new ThrowableAssertion("10", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
@@ -302,15 +305,143 @@ public abstract class EventArgsTestBasic
         ensureArgsHasDependencies("6.2", parentArgs, args);
         ensureEventArgsDoesntReturnDependants("6.3", otherArgs);
         ensureArgsHasDependencies("6.4", otherParentArgs, args);
-        
-        
-        
     }
     
     @Test
     public void testUsageState()
     {
+        final EventArgs argsNormal = getNewArgs();
+        final EventArgs argsUsePostBeforePre = getNewArgs();
+        final EventArgs argsFinishedBeforeStarted = getNewArgs();
+        final EventArgs argsMultipleUse = getNewArgs();
         
+        new NoThrowableAssertion("1.1", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsNormal.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new NoThrowableAssertion("1.2", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsNormal.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new NoThrowableAssertion("1.3", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsNormal.getTechnicalAccessor().markAsUsingPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("1.4", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsNormal.getTechnicalAccessor().markAsUsedPostEvent(); }
+        };
+        
+        new ThrowableAssertion("2.1", EventArgsUsedPostBeforePreException.class)
+        {
+            @Override
+            public void code()
+            { argsUsePostBeforePre.getTechnicalAccessor().markAsUsingPostEvent(); }
+        };
+        
+        new ThrowableAssertion("2.2", EventArgsUsedPostBeforePreException.class)
+        {
+            @Override
+            public void code()
+            { argsUsePostBeforePre.getTechnicalAccessor().markAsUsedPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("2.3", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsUsePostBeforePre.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new NoThrowableAssertion("2.4", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsUsePostBeforePre.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new ThrowableAssertion("2.5", EventArgsUsedPostBeforePreException.class)
+        {
+            @Override
+            public void code()
+            { argsUsePostBeforePre.getTechnicalAccessor().markAsUsedPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("2.6", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsUsePostBeforePre.getTechnicalAccessor().markAsUsingPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("2.7", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsUsePostBeforePre.getTechnicalAccessor().markAsUsedPostEvent(); }
+        };
+        
+        new ThrowableAssertion("3.1", EventArgsFinishedBeforeStartedException.class)
+        {
+            @Override
+            public void code()
+            { argsFinishedBeforeStarted.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new NoThrowableAssertion("3.2", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsFinishedBeforeStarted.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new NoThrowableAssertion("3.3", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsFinishedBeforeStarted.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new ThrowableAssertion("3.4", EventArgsFinishedBeforeStartedException.class)
+        {
+            @Override
+            public void code()
+            { argsFinishedBeforeStarted.getTechnicalAccessor().markAsUsedPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("3.5", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsFinishedBeforeStarted.getTechnicalAccessor().markAsUsingPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("3.6", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsFinishedBeforeStarted.getTechnicalAccessor().markAsUsedPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("4.1", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            {
+                
+            }
+        };
     }
     
     @Test

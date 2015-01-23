@@ -1,6 +1,6 @@
 package com.enkigaming.lib.events.exceptions;
 
-public class EventArgsUsedPostBeforePreException extends RuntimeException
+public class EventArgsUsedPostBeforePreException extends EventArgsStateException
 {
     public EventArgsUsedPostBeforePreException() { super(); }
 

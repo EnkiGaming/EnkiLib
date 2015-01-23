@@ -1,6 +1,6 @@
 package com.enkigaming.lib.events.exceptions;
 
-public class EventArgsMultipleUseException extends RuntimeException
+public class EventArgsMultipleUseException extends EventArgsStateException
 {
     public EventArgsMultipleUseException() { super(); }
 

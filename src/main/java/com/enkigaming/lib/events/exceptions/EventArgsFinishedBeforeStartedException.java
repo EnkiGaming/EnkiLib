@@ -1,6 +1,6 @@
 package com.enkigaming.lib.events.exceptions;
 
-public class EventArgsFinishedBeforeStartedException extends RuntimeException
+public class EventArgsFinishedBeforeStartedException extends EventArgsStateException
 {
     public EventArgsFinishedBeforeStartedException() { super(); }
 
