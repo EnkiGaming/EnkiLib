@@ -31,7 +31,10 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
             synchronized(dependentEvents)
             { return dependentEvents.keySet(); }
         
-        Collection<Event<?>> events = new HashSet<Event<?>>(dependentEvents.keySet());
+        Collection<Event<?>> events;
+        
+        synchronized(dependentEvents)
+        { events = new HashSet<Event<?>>(dependentEvents.keySet()); }
         
         if(includeDependantsCascadingly)
         {
@@ -77,7 +80,7 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     public Collection<EventListener<T>> getListeners()
     {
         synchronized(listeners)
-        { return listeners.keySet(); }
+        { return new HashSet<EventListener<T>>(listeners.keySet()); }
     }
 
     @Override
@@ -94,8 +97,11 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         // Collection that allows multiple values, as the same listener may be registered to multiple events.
         Collection<EventListener<?>> returnListeners = new ArrayList<EventListener<?>>();
         
-        for(Event<?> i : getDependentEvents(includeListenersOfThis, includeDependantsCascadingly))
-            returnListeners.addAll(i.getListeners());
+        synchronized(dependentEvents)
+        {
+            for(Event<?> i : getDependentEvents(includeListenersOfThis, includeDependantsCascadingly))
+                returnListeners.addAll(i.getListeners());
+        }
         
         return returnListeners;
     }
