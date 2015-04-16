@@ -60,4 +60,32 @@ public class Assert
             fail(message + ": " + "Collection was not empty. Contained: " + "\n"
                + howItBe.toString());
     }
+    
+    public static void assertAllTrue(boolean... howItBe)
+    { assertAllTrue("", howItBe); }
+    
+    public static void assertAllTrue(String message, boolean... howItBe)
+    {
+        if(howItBe == null)
+            fail(message + ": " + "Array was null, should not have been.");
+        
+        for(int i = 0; i < howItBe.length; i++)
+            if(!howItBe[i])
+                fail(message + ": " + "Not all values were true; value [" + i + "] was false.");
+    }
+    
+    public static void assertAllFalse(boolean... howItBe)
+    { assertAllFalse("", howItBe); }
+    
+    public static void assertAllFalse(String message, boolean... howItBe)
+    {
+        if(howItBe == null)
+            fail(message + ": " + "Array was null, should not have been.");
+        
+        for(int i = 0; i < howItBe.length; i++)
+            if(howItBe[i])
+                fail(message + ": " + "Not all values were false; value [" + i + "] was true.");
+    }
+    
+    
 }

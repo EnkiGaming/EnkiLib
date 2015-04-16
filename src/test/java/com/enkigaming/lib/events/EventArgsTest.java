@@ -3,6 +3,7 @@ package com.enkigaming.lib.events;
 import com.enkigaming.lib.collections.CollectionMethods;
 import com.enkigaming.lib.events.exceptions.EventArgsFinishedBeforeStartedException;
 import com.enkigaming.lib.events.exceptions.EventArgsModifiedWhenImmutableException;
+import com.enkigaming.lib.events.exceptions.EventArgsMultipleUseException;
 import com.enkigaming.lib.events.exceptions.EventArgsStateException;
 import com.enkigaming.lib.events.exceptions.EventArgsUsedPostBeforePreException;
 import org.junit.Test;
@@ -10,13 +11,18 @@ import com.enkigaming.lib.testing.ThrowableAssertion;
 import static org.junit.Assert.*;
 import static com.enkigaming.lib.testing.Assert.*;
 import com.enkigaming.lib.testing.NoThrowableAssertion;
+import com.enkigaming.lib.tuples.Triplet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Queue;
 
-public abstract class EventArgsTestBasic
+public abstract class EventArgsTest
 {
     public abstract EventArgs getNewArgs();
+    
+    public abstract Event<EventArgs> getNewEvent();
     
     private void makeRelationship(EventArgs parent, EventArgs dependant)
     {
@@ -61,24 +67,24 @@ public abstract class EventArgsTestBasic
         
         final EventArgs args2 = getNewArgs();
         
-        assertFalse("14", args.setCancelled(true));
+        assertFalse("14", args2.setCancelled(true));
         
         args2.getTechnicalAccessor().makeImmutable();
         
-        assertTrue("15", args.isCancelled());
+        assertTrue("15", args2.isCancelled());
         
         new ThrowableAssertion("16", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
-            { args.setCancelled(true); }
+            { args2.setCancelled(true); }
         };
         
         new ThrowableAssertion("17", EventArgsModifiedWhenImmutableException.class)
         {
             @Override
             public void code() throws Exception
-            { args.setCancelled(false); }
+            { args2.setCancelled(false); }
         };
         
         assertTrue("18", args2.isCancelled());
@@ -131,23 +137,23 @@ public abstract class EventArgsTestBasic
         EventArgs master1 = getNewArgs();
         EventArgs master2 = getNewArgs();
         
-        assertNull("1", args.getMasterArgs());
+        assertSame("1", args, args.getMasterArgs());
         
         args.getTechnicalAccessor().setParentArgs(master1);
         
-        assertSame("2", args.getMasterArgs(), master1);
-        assertNull("3", master1.getMasterArgs());
+        assertSame("2", master1, args.getMasterArgs());
+        assertSame("3", master1, master1.getMasterArgs());
         
         args.getTechnicalAccessor().setParentArgs(master2);
         
-        assertSame("4", args.getMasterArgs(), master2);
-        assertNull("5", master2.getMasterArgs());
+        assertSame("4", master2, args.getMasterArgs());
+        assertSame("5", master2, master2.getMasterArgs());
         
         master2.getTechnicalAccessor().setParentArgs(master1);
         
-        assertSame("6", args.getMasterArgs(), master1);
-        assertSame("7", master2.getMasterArgs(), master1);
-        assertNull("8", master1.getMasterArgs());
+        assertSame("6", master1, args.getMasterArgs());
+        assertSame("7", master1, master2.getMasterArgs());
+        assertSame("8", master1, master1.getMasterArgs());
     }
     
     @Test
@@ -193,7 +199,7 @@ public abstract class EventArgsTestBasic
         
         assertSame("3.4.1", uncleArgs.getParentArgs(), grandparentArgs);
         assertSame("3.4.2", uncleArgs.getMasterArgs(), grandparentArgs);
-        ensureArgsHasDependencies("3.4.3", uncleArgs, args);
+        ensureArgsHasDependencies("3.4.3", uncleArgs, cousinArgs);
         
         assertSame("3.5.1", cousinArgs.getParentArgs(), uncleArgs);
         assertSame("3.5.2", cousinArgs.getMasterArgs(), grandparentArgs);
@@ -304,7 +310,7 @@ public abstract class EventArgsTestBasic
         ensureEventArgsDoesntReturnDependants("6.1", args);
         ensureArgsHasDependencies("6.2", parentArgs, args);
         ensureEventArgsDoesntReturnDependants("6.3", otherArgs);
-        ensureArgsHasDependencies("6.4", otherParentArgs, args);
+        ensureArgsHasDependencies("6.4", otherParentArgs, otherArgs);
     }
     
     @Test
@@ -371,7 +377,7 @@ public abstract class EventArgsTestBasic
             { argsUsePostBeforePre.getTechnicalAccessor().markAsUsedPreEvent(); }
         };
         
-        new ThrowableAssertion("2.5", EventArgsUsedPostBeforePreException.class)
+        new ThrowableAssertion("2.5", EventArgsFinishedBeforeStartedException.class)
         {
             @Override
             public void code()
@@ -438,21 +444,142 @@ public abstract class EventArgsTestBasic
         {
             @Override
             public void code()
-            {
-                
-            }
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new ThrowableAssertion("4.1.1", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new NoThrowableAssertion("4.2", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new ThrowableAssertion("4.2.1", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new ThrowableAssertion("4.2.2", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new NoThrowableAssertion("4.3", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPostEvent();}
+        };
+        
+        new ThrowableAssertion("4.3.1", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new ThrowableAssertion("4.3.2", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new ThrowableAssertion("4.3.3", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPostEvent(); }
+        };
+        
+        new NoThrowableAssertion("4.4", EventArgsStateException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsedPostEvent();}
+        };
+        
+        new ThrowableAssertion("4.4.1", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPreEvent(); }
+        };
+        
+        new ThrowableAssertion("4.4.2", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsedPreEvent(); }
+        };
+        
+        new ThrowableAssertion("4.4.3", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsingPostEvent(); }
+        };
+        
+        new ThrowableAssertion("4.4.4", EventArgsMultipleUseException.class)
+        {
+            @Override
+            public void code()
+            { argsMultipleUse.getTechnicalAccessor().markAsUsedPostEvent(); }
         };
     }
     
     @Test
     public void testEvent()
     {
+        EventArgs args = getNewArgs();
+        Event<EventArgs> event1 = getNewEvent();
+        Event<EventArgs> event2 = getNewEvent();
         
+        assertNull("1", args.getEvent());
+        
+        args.getTechnicalAccessor().setEvent(event1);
+//        
+//        assertSame("2", event1, args.getEvent());
+//        
+//        args.getTechnicalAccessor().setEvent(event2);
+//        
+//        assertSame("3", event2, args.getEvent());
+//        
+//        args.getTechnicalAccessor().setEvent(null);
+//        
+//        assertSame("4", null, args.getEvent());
     }
     
     @Test
     public void testListenerQueue()
     {
+        EventArgs args = getNewArgs();
+        Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> queue1 = new LinkedList<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>>();
+        Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> queue2 = new LinkedList<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>>();
         
+        assertNull("1", args.getTechnicalAccessor().getListenerQueue());
+        
+        args.getTechnicalAccessor().setListenerQueue(queue1);
+        
+        assertSame("2", queue1, args.getTechnicalAccessor().getListenerQueue());
+        
+        args.getTechnicalAccessor().setListenerQueue(queue2);
+        
+        assertSame("3", queue2, args.getTechnicalAccessor().getListenerQueue());
+        
+        args.getTechnicalAccessor().setListenerQueue(null);
+        
+        assertNull("1", args.getTechnicalAccessor().getListenerQueue());
     }
 }

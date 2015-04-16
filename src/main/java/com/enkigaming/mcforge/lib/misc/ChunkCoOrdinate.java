@@ -235,7 +235,11 @@ public class ChunkCoOrdinate
             return false;
         if(this.zCoOrd != other.zCoOrd)
             return false;
-        if(this.worldID != other.worldID)
+//        if(this.worldID != other.worldID)
+//            return false;
+        if(this.worldID == null && other.worldID != null
+        || this.worldID != null && other.worldID == null
+        || (!(this.worldID == null && other.worldID == null) && !this.worldID.equals(other.worldID)))
             return false;
         
         return true;

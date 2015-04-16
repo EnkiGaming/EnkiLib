@@ -1,5 +1,6 @@
 package com.enkigaming.lib.misc;
 
+import com.enkigaming.lib.encapsulatedfunctions.Transformer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,11 +39,11 @@ public class SortedListHandler<T>
      * Constructs the handler.
      * @param keyGetter The encapsulated function for determining the key a list should be sorted by.
      */
-    public SortedListHandler(Lambda<T, Comparable> keyGetter) { this.keyGetter = keyGetter; }
+    public SortedListHandler(Transformer<T, Comparable> keyGetter) { this.keyGetter = keyGetter; }
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Fields">
-    Lambda<T, Comparable> keyGetter;
+    Transformer<T, Comparable> keyGetter;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Methods">
@@ -53,7 +54,7 @@ public class SortedListHandler<T>
      * @return
      */
     protected Comparable getKey(T ContainingObject)
-    { return keyGetter.getMember(ContainingObject); }
+    { return keyGetter.get(ContainingObject); }
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Sorting">

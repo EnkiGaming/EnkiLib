@@ -11,8 +11,10 @@ public abstract class ThrowableAssertion
         catch(Throwable e)
         {
             if(!throwableType.isInstance(e))
-                fail(message + ": Throwable other than specified throwable (" + throwableType.getSimpleName() + ") "
-                     + "thrown.");
+//                fail(message + ": Throwable other than specified throwable (" + throwableType.getSimpleName() + ") "
+//                     + "thrown.");
+                fail(message + ": Throwable other than specified one thrown. Expected " + throwableType.getSimpleName()
+                     + ", caught " + e.getClass().getSimpleName());
 
             return;
         }

@@ -1,5 +1,7 @@
 package com.enkigaming.lib.events;
 
+import com.enkigaming.lib.encapsulatedfunctions.Converger;
+import com.enkigaming.lib.tuples.Pair;
 import java.util.Collection;
 import java.util.Map;
 
@@ -52,13 +54,20 @@ public interface Event<T extends EventArgs>
      * Gets directly dependent events and the getters for generating required args from args passed to raises of this event.
      * @return A map containing the events and their matching DependentEventArgsGetters.
      */
-    public Map<Event<? extends EventArgs>, DependentEventArgsGetter<T, ? extends EventArgs>> getDirectlyDependentEventsAndArgsGetters();
+    public Map<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>> getDirectlyDependentEventsAndArgsGetters();
     
     /**
      * Gets all event listeners registered to this event.
      * @return A collection containing registered event listeners.
      */
     public Collection<EventListener<T>> getListeners();
+    
+    /**
+     * Gets all event listeners registered to this event, mapped with double representation of their listener
+     * priorities.
+     * @return A map, with the listeners as the keys and a double representing the listener priorities as the values.
+     */
+    public Map<EventListener<T>, Double> getListenersWithPriorities();
     
     /**
      * Gets listeners of dependent events.
@@ -70,7 +79,8 @@ public interface Event<T extends EventArgs>
     
     /**
      * Gets listeners of all dependent events.
-     * @return A collection containing the listeners of all dependent events, including indirectly dependent events.
+     * @return A collection containing the listeners of all dependent events, including indirectly dependent events,
+     * not including this event's own listeners.
      */
     public Collection<EventListener<? extends EventArgs>> getDependentListeners();
     
@@ -84,7 +94,7 @@ public interface Event<T extends EventArgs>
      * Gets listeners of this and all dependent events.
      * @return A collection containing the listeners of this event and all events dependent on this one.
      */
-    public Collection<EventListener<? extends EventArgs>> getThisAndDependentEventArgs();
+    public Collection<EventListener<? extends EventArgs>> getThisAndDependentListeners();
     
     /**
      * Gets listeners of this and directly dependent events.
@@ -132,7 +142,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvent The event to raise alongside this one and the args to pass to it.
      */
-    public void raiseAlongside(Object sender, T args, EventWithArgs<? extends EventArgs> otherEvent);
+    public void raiseAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs> otherEvent);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -147,7 +157,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, EventWithArgs<? extends EventArgs>... otherEvents);
+    public void raiseAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs>... otherEvents);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -162,7 +172,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, Collection<EventWithArgs<? extends EventArgs>> otherEvents);
+    public void raiseAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -178,7 +188,7 @@ public interface Event<T extends EventArgs>
      * @param shareCancellation whether to share the cancellation state between the different passed events or not.
      * @param otherEvent The event to raise alongside this one and the args to pass to it.
      */
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, EventWithArgs<? extends EventArgs> otherEvent);
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<? extends EventArgs>, EventArgs> otherEvent);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -194,7 +204,7 @@ public interface Event<T extends EventArgs>
      * @param shareCancellation whether to share the cancellation state between the different passed events or not.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, EventWithArgs<? extends EventArgs>... otherEvents);
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<? extends EventArgs>, EventArgs>... otherEvents);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -210,7 +220,7 @@ public interface Event<T extends EventArgs>
      * @param shareCancellation whether to share the cancellation state between the different passed events or not.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Collection<EventWithArgs<? extends EventArgs>> otherEvents);
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
     
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
@@ -223,7 +233,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvent The event to raise alongside this one and the args to pass to it.
      */
-    public void raisePostEventAlongside(Object sender, T args, EventWithArgs<? extends EventArgs> otherEvent);
+    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs> otherEvent);
     
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
@@ -236,7 +246,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raisePostEventAlongside(Object sender, T args, EventWithArgs<? extends EventArgs>... otherEvents);
+    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs>... otherEvents);
     
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
@@ -249,7 +259,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raisePostEventAlongside(Object sender, T args, Collection<EventWithArgs<? extends EventArgs>> otherEvents);
+    public void raisePostEventAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="Mutators">
@@ -260,6 +270,28 @@ public interface Event<T extends EventArgs>
      * @param listener The listener to register.
      */
     public void register(EventListener<T> listener);
+    
+    public void register(EventListener<T>... listeners);
+    
+    public void register(EventListener<T> listener, double priority);
+    
+    public void register(EventListener<T> listener, ListenerPriority priority);
+    
+    public void register(double priority, EventListener<T> listener);
+    
+    public void register(ListenerPriority priority, EventListener<T> listener);
+    
+    public void register(double priority, EventListener<T>... listener);
+    
+    public void register(ListenerPriority priority, EventListener<T>... listener);
+    
+    public void register(double priority, Collection<EventListener<T>> listeners);
+    
+    public void register(ListenerPriority priority, Collection<EventListener<T>> listeners);
+    
+    public void register(Collection<EventListener<T>> listeners, double priority);
+    
+    public void register(Collection<EventListener<T>> listeners, ListenerPriority priority);
     
     /**
      * Registers an event, alongside a DependentEventArgsGetter to generate the required EventArgs object, as a
@@ -272,7 +304,15 @@ public interface Event<T extends EventArgs>
      * generate the required EventArgs object using the information from the EventArgs object passed to a raise of this
      * object.
      */
-    public <TArgs extends EventArgs> void register(Event<TArgs> event, DependentEventArgsGetter<T, TArgs> eventArgsGetter);
+    public <TArgs extends EventArgs> void register(Event<TArgs> event, Converger<Object, T, TArgs> eventArgsGetter);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter, Event<TArgs> event);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Event<? extends TArgs>... events);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Collection<? extends Event<? extends TArgs>> events);
     
     /**
      * Removes an event listener from this event, stopping its onEvent method from being called when this event is
@@ -281,7 +321,9 @@ public interface Event<T extends EventArgs>
      * @return True if an event listener was successfully deregistered from the event, false if it wasn't. (Such as
      * because the event listener wasn't registered to the event in order to be deregistered)
      */
-    public boolean deregister(EventListener<T> listener);
+    public EventListener<T> deregister(EventListener<T> listener);
+    
+    public Collection<EventListener<T>> deregister(EventListener<T>... listeners);
     
     /**
      * Removes an event from this event as a dependant, stopping it from being raised alongside this one. (Except,
@@ -290,6 +332,10 @@ public interface Event<T extends EventArgs>
      * @return True if an event was successfully deregistered from the event, false if it wasn't. (Such as because the
      * event wasn't registered as a dependant in order to be deregistered)
      */
-    public boolean deregister(Event<? extends EventArgs> event);
+    public Event<? extends EventArgs> deregister(Event<? extends EventArgs> event);
+    
+    public Collection<Event<? extends EventArgs>> deregister(Event<? extends EventArgs>... event);
+    
+    // No deregistration of collections of event listeners or events, thanks type erasure :<
     //</editor-fold>
 }

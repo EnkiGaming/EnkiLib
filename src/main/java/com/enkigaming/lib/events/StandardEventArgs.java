@@ -4,6 +4,7 @@ import com.enkigaming.lib.events.exceptions.EventArgsFinishedBeforeStartedExcept
 import com.enkigaming.lib.events.exceptions.EventArgsModifiedWhenImmutableException;
 import com.enkigaming.lib.events.exceptions.EventArgsMultipleUseException;
 import com.enkigaming.lib.events.exceptions.EventArgsUsedPostBeforePreException;
+import com.enkigaming.lib.tuples.Triplet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,26 +28,25 @@ public class StandardEventArgs implements EventArgs
     boolean mutable = true;
     EventArgs parentArgs = null;
     Status status = Status.Unused;
-    Queue<ListenerArgsPairing> listenerQueue = null;
+    Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> listenerQueue = null;
     
     final Set<EventArgs> relatedMasterArgs = new HashSet<EventArgs>();
-    final Set<EventArgs> dependentArgs = new HashSet<EventArgs>();
+    final Set<EventArgs> dependentArgs     = new HashSet<EventArgs>();
     
-    final Object cancelledBusy = new Object();
-    final Object mutableBusy = new Object();
-    final Object parentArgsBusy = new Object();
-    final Object eventBusy = new Object();
-    final Object statusBusy = new Object();
+    final Object cancelledBusy     = new Object();
+    final Object mutableBusy       = new Object();
+    final Object parentArgsBusy    = new Object();
+    final Object eventBusy         = new Object();
+    final Object statusBusy        = new Object();
     final Object listenerQueueBusy = new Object();
     
     @Override
     public boolean isCancelled()
     {
-        synchronized(parentArgsBusy)
-        {
-            if(getParentArgs() != null)
-                return getParentArgs().isCancelled();
-        }
+        EventArgs master = getMasterArgs();
+            
+        if(master != this)
+            return master.isCancelled();
         
         synchronized(cancelledBusy)
         { return cancelled; }
@@ -55,35 +55,29 @@ public class StandardEventArgs implements EventArgs
     @Override
     public boolean setCancelled(boolean cancellation)
     {
-        if(shouldBeMutable())
-        {
-            synchronized(parentArgsBusy)
-            {
-                EventArgs parent = getParentArgs();
-                
-                if(parent != null)
-                    return parent.setCancelled(cancellation);
-            }
+        if(!shouldBeMutable())
+            throw new EventArgsModifiedWhenImmutableException();
             
-            synchronized(cancelledBusy)
-            {
-                boolean oldValue = cancelled;
-                cancelled = cancellation;
-                return oldValue;
-            }
+        EventArgs master = getMasterArgs();
+
+        if(master != this)
+            return master.setCancelled(cancellation);
+
+        synchronized(cancelledBusy)
+        {
+            boolean oldValue = cancelled;
+            cancelled = cancellation;
+            return oldValue;
         }
-        
-        throw new EventArgsModifiedWhenImmutableException();
     }
 
     @Override
     public boolean shouldBeMutable()
     {
-        synchronized(parentArgsBusy)
-        {
-            if(getParentArgs() != null)
-                return getParentArgs().shouldBeMutable();
-        }
+        EventArgs master = getMasterArgs();
+
+        if(master != this)
+            return master.shouldBeMutable();
         
         synchronized(mutableBusy)
         { return mutable; }
@@ -91,15 +85,12 @@ public class StandardEventArgs implements EventArgs
     
     protected void makeImmutable()
     {
-        synchronized(parentArgsBusy)
-        {
-            EventArgs parent = getParentArgs();
+        EventArgs master = getMasterArgs();
 
-            if(parent != null)
-            {
-                parent.getTechnicalAccessor().makeImmutable();
-                return;
-            }
+        if(master != this)
+        {
+            master.getTechnicalAccessor().makeImmutable();
+            return;
         }
         
         synchronized(mutableBusy)
@@ -109,13 +100,10 @@ public class StandardEventArgs implements EventArgs
     @Override
     public Collection<EventArgs> getRelatedMasterArgs()
     {
-        synchronized(parentArgs)
-        {
-            EventArgs master = getMasterArgs();
-            
-            if(master != null)
-                return master.getRelatedMasterArgs();
-        }
+        EventArgs master = getMasterArgs();
+
+        if(master != this)
+            return master.getRelatedMasterArgs();
         
         synchronized(relatedMasterArgs)
         { return new ArrayList<EventArgs>(relatedMasterArgs); }
@@ -127,7 +115,7 @@ public class StandardEventArgs implements EventArgs
         Collection<EventArgs> masters = new HashSet<EventArgs>(getRelatedMasterArgs());
         EventArgs thisMaster = getMasterArgs();
         
-        if(thisMaster == null)
+        if(thisMaster == this)
             masters.add(this);
         else
             masters.add(thisMaster);
@@ -136,6 +124,8 @@ public class StandardEventArgs implements EventArgs
         
         for(EventArgs i : masters)
             relatedArgs.addAll(i.getDependentArgs(true, true));
+        
+        relatedArgs.remove(this);
         
         return relatedArgs;
     }
@@ -221,9 +211,6 @@ public class StandardEventArgs implements EventArgs
             if(parentArgs == null)
                 return this;
             
-            if(parentArgs.getParentArgs() == null)
-                return parentArgs;
-            
             return parentArgs.getMasterArgs();
         }
     }
@@ -243,6 +230,14 @@ public class StandardEventArgs implements EventArgs
     
     protected void markAsUsingPreEvent()
     {
+        EventArgs master = getMasterArgs();
+            
+        if(master != this)
+        {
+            master.getTechnicalAccessor().markAsUsingPreEvent();
+            return;
+        }
+        
         synchronized(statusBusy)
         {
             if(status != Status.Unused)
@@ -254,6 +249,14 @@ public class StandardEventArgs implements EventArgs
 
     protected void markAsUsedPreEvent()
     {
+        EventArgs master = getMasterArgs();
+            
+        if(master != this)
+        {
+            master.getTechnicalAccessor().markAsUsedPreEvent();
+            return;
+        }
+        
         synchronized(statusBusy)
         {
             switch(status)
@@ -275,6 +278,14 @@ public class StandardEventArgs implements EventArgs
 
     protected void markAsUsingPostEvent()
     {
+        EventArgs master = getMasterArgs();
+            
+        if(master != this)
+        {
+            master.getTechnicalAccessor().markAsUsingPostEvent();
+            return;
+        }
+        
         synchronized(statusBusy)
         {
             switch(status)
@@ -297,6 +308,14 @@ public class StandardEventArgs implements EventArgs
 
     protected void markAsUsedPostEvent()
     {
+        EventArgs master = getMasterArgs();
+            
+        if(master != this)
+        {
+            master.getTechnicalAccessor().markAsUsedPostEvent();
+            return;
+        }
+        
         synchronized(statusBusy)
         {
             switch(status)
@@ -318,13 +337,13 @@ public class StandardEventArgs implements EventArgs
         }
     }
     
-    protected void setListenerQueue(Queue<ListenerArgsPairing> queue)
+    protected void setListenerQueue(Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> queue)
     {
         synchronized(listenerQueueBusy)
         { listenerQueue = queue; }
     }
     
-    protected Queue<ListenerArgsPairing> getListenerQueue()
+    protected Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> getListenerQueue()
     {
         synchronized(listenerQueueBusy)
         { return listenerQueue; }
@@ -353,7 +372,7 @@ public class StandardEventArgs implements EventArgs
 
             @Override
             public void setEvent(Event<? extends EventArgs> event)
-            { setEvent(event); }
+            { StandardEventArgs.this.setEvent(event); }
 
             @Override
             public void setParentArgs(EventArgs args)
@@ -380,13 +399,12 @@ public class StandardEventArgs implements EventArgs
             { StandardEventArgs.this.addRelatedMasterArgs(args); }
 
             @Override
-            public void setListenerQueue(Queue<ListenerArgsPairing> listenerQueue)
+            public void setListenerQueue(Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> listenerQueue)
             { StandardEventArgs.this.setListenerQueue(listenerQueue); }
 
             @Override
-            public Queue<ListenerArgsPairing> getListenerQueue()
+            public Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> getListenerQueue()
             { return StandardEventArgs.this.getListenerQueue(); }
         };
     }
-    
 }

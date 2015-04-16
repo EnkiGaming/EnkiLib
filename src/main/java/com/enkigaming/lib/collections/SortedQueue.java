@@ -1,6 +1,6 @@
 package com.enkigaming.lib.collections;
 
-import com.enkigaming.lib.misc.Lambda;
+import com.enkigaming.lib.encapsulatedfunctions.Transformer;
 import com.enkigaming.lib.misc.SortedListHandler;
 import com.enkigaming.lib.exceptions.NullArgumentException;
 import java.util.ArrayList;
@@ -23,10 +23,10 @@ public class SortedQueue<T> implements Queue<T>
      * Constructor. Generates the queue with no values.
      * @param keyGetter The Lambda object used to derive the comparable from contained objects in order to order them.
      */
-    public SortedQueue(Lambda<T, Comparable> keyGetter)
+    public SortedQueue(Transformer<T, Comparable> keyGetter)
     {
         members = new ArrayList<T>();
-        this.keyGetter = keyGetter;
+        //this.keyGetter = keyGetter;
         membersHandler = new SortedListHandler<T>(keyGetter);
     }
     
@@ -35,7 +35,7 @@ public class SortedQueue<T> implements Queue<T>
      * @param keyGetter The Lambda object used to derive the comparable from contained objects in order to order them.
      * @param members The objects to pre-fill this queue with.
      */
-    public SortedQueue(Lambda<T, Comparable> keyGetter, T... members)
+    public SortedQueue(Transformer<T, Comparable> keyGetter, T... members)
     { this(keyGetter, Arrays.asList(members)); }
     
     /**
@@ -43,11 +43,11 @@ public class SortedQueue<T> implements Queue<T>
      * @param keyGetter The Lambda object used to derive the comparable from contained objects in order to order them.
      * @param members The objects to pre-fill this queue with.
      */
-    public SortedQueue(Lambda<T, Comparable> keyGetter, Collection<? extends T> members)
+    public SortedQueue(Transformer<T, Comparable> keyGetter, Collection<? extends T> members)
     {
-        this.members = new ArrayList<T>(members);
-        this.keyGetter = keyGetter;
+        //this.keyGetter = keyGetter;
         membersHandler = new SortedListHandler<T>(keyGetter);
+        this.members = membersHandler.quickSort(new ArrayList<T>(members));
     }
     
     /**
@@ -55,7 +55,7 @@ public class SortedQueue<T> implements Queue<T>
      * @param keyGetter The Lambda object used to derive the comparable from contained objects in order to order them.
      * @param members The objects to pre-fill this queue with.
      */
-    public SortedQueue(T[] members, Lambda<T, Comparable> keyGetter)
+    public SortedQueue(T[] members, Transformer<T, Comparable> keyGetter)
     { this(keyGetter, Arrays.asList(members)); }
     
     /**
@@ -63,7 +63,7 @@ public class SortedQueue<T> implements Queue<T>
      * @param keyGetter The Lambda object used to derive the comparable from contained objects in order to order them.
      * @param members The objects to pre-fill this queue with.
      */
-    public SortedQueue(Collection<? extends T> members, Lambda<T, Comparable> keyGetter)
+    public SortedQueue(Collection<? extends T> members, Transformer<T, Comparable> keyGetter)
     { this(keyGetter, members); }
     //</editor-fold>
 
@@ -81,7 +81,7 @@ public class SortedQueue<T> implements Queue<T>
     /**
      * The lambda object used for extracting the key by this the queue is sorted from the individual members.
      */
-    final Lambda<T, Comparable> keyGetter;
+    //final Transformer<T, Comparable> keyGetter;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Methods">

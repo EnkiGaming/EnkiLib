@@ -12,3 +12,16 @@
 .gradle/2.0/taskArtifacts/taskArtifacts.bin
 
 .gradle/2.0/taskArtifacts/outputFileStates.bin
+
+gradle
+
+gradlew
+
+gradlew.bat
+
+build.gradle
+
+build.xml
+
+
+gradlew

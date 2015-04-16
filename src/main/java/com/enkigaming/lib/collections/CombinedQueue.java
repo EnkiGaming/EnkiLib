@@ -1,7 +1,7 @@
 package com.enkigaming.lib.collections;
 
 import com.enkigaming.lib.exceptions.NullArgumentException;
-import com.enkigaming.lib.misc.Lambda;
+import com.enkigaming.lib.encapsulatedfunctions.Transformer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +26,7 @@ public class CombinedQueue<T> implements Queue<T>
      * to be drawn from are to be added.
      * @param keyGetter The lambda object used for grabbing the comparable used for determining the next value.
      */
-    public CombinedQueue(Lambda<T, Comparable> keyGetter)
+    public CombinedQueue(Transformer<T, Comparable> keyGetter)
     { this.keyGetter = keyGetter; }
     
     /**
@@ -35,7 +35,7 @@ public class CombinedQueue<T> implements Queue<T>
      * Determines the next value from the next items in each of the held queues.
      * @param queues The queues from which to draw values.
      */
-    public CombinedQueue(Lambda<T, Comparable> keyGetter, Queue<? extends T>... queues)
+    public CombinedQueue(Transformer<T, Comparable> keyGetter, Queue<? extends T>... queues)
     { this(keyGetter, Arrays.asList(queues)); }
     
     /**
@@ -44,7 +44,7 @@ public class CombinedQueue<T> implements Queue<T>
      * @param keyGetter The lambda object used for grabbing the comparable used for determining the next value.
      * Determines the next value from the next items in each of the held queues.
      */
-    public CombinedQueue(Queue<? extends T>[] queues, Lambda<T, Comparable> keyGetter)
+    public CombinedQueue(Queue<? extends T>[] queues, Transformer<T, Comparable> keyGetter)
     { this(keyGetter, queues); }
     
     /**
@@ -53,7 +53,7 @@ public class CombinedQueue<T> implements Queue<T>
      * Determines the next value from the next items in each of the held queues.
      * @param queues The queues from which to draw values.
      */
-    public CombinedQueue(Lambda<T, Comparable> keyGetter, Collection<? extends Queue<? extends T>> queues)
+    public CombinedQueue(Transformer<T, Comparable> keyGetter, Collection<? extends Queue<? extends T>> queues)
     {
         this.keyGetter = keyGetter;
         memberQueues.addAll((Collection<? extends Queue<T>>)queues);
@@ -65,7 +65,7 @@ public class CombinedQueue<T> implements Queue<T>
      * @param keyGetter The lambda object used for grabbing the comparable used for determining the next value.
      * Determines the next value from the next items in each of the held queues.
      */
-    public CombinedQueue(Collection<? extends Queue<? extends T>> queues, Lambda<T, Comparable> keyGetter)
+    public CombinedQueue(Collection<? extends Queue<? extends T>> queues, Transformer<T, Comparable> keyGetter)
     { this(keyGetter, queues); }
     //</editor-fold>
 
@@ -79,7 +79,7 @@ public class CombinedQueue<T> implements Queue<T>
      * The lambda object that derives the comparable used for determining the next value from the values held in the
      * queues.
      */
-    final Lambda<T, Comparable> keyGetter;
+    final Transformer<T, Comparable> keyGetter;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Methods">
@@ -135,7 +135,7 @@ public class CombinedQueue<T> implements Queue<T>
                                 nextQueue = j;
                             else if(jValue != null)
                             {
-                                Comparable jValueComparable = keyGetter.getMember(jValue);
+                                Comparable jValueComparable = keyGetter.get(jValue);
                                 
                                 if(j == nextQueue)
                                 {

@@ -1,5 +1,6 @@
 package com.enkigaming.lib.events;
 
+import com.enkigaming.lib.tuples.Triplet;
 import java.util.Collection;
 import java.util.Queue;
 
@@ -22,25 +23,25 @@ public interface EventArgs
     {
         /**
          * Marks the event args as being used in an in-progress pre-event raise, and ensures it's in the correct state to be
-         * used as such.
+         * used as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsingPreEvent();
     
         /**
          * Marks the event args as having been using in a pre-event raise, and ensure it's in the correct state to be
-         * marked as such.
+         * marked as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsedPreEvent();
 
         /**
          * Marks the event args as being used in an in-progress post-event raise, and ensures it's in the correct state to be
-         * used as such.
+         * used as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsingPostEvent();
 
         /**
          * Marks the event args as having been using in a post-event raise, and ensure it's in the correct state to be
-         * marked as such.
+         * marked as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsedPostEvent();
 
@@ -93,7 +94,7 @@ public interface EventArgs
          * registered or deregistered from the event
          * @param listenerQueue 
          */
-        void setListenerQueue(Queue<ListenerArgsPairing> listenerQueue);
+        void setListenerQueue(Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> listenerQueue);
         
         /**
          * Gets the listener queue stored on the event args object. Intended for returning the queue of listeners that
@@ -101,7 +102,7 @@ public interface EventArgs
          * pre-event raise with a post-event priority.
          * @return The queue of listeners to be raised.
          */
-        Queue<ListenerArgsPairing> getListenerQueue();
+        Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> getListenerQueue();
     }
     
     /**
