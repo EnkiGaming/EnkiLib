@@ -20,6 +20,7 @@ public class UsernameCache
     { fileHandler = makeFileHandler(saveFolder); }
     
     protected Map<UUID, String> recordedUsernames = new HashMap<UUID, String>();
+    protected Map<String, UUID> nameIndex = new HashMap<String, UUID>(); // for fast lookup of IDs by name.
     
     protected Lock recordedUsernamesLock = new ReentrantLock();
     protected FileHandler fileHandler;
@@ -56,6 +57,7 @@ public class UsernameCache
                 { return false; }
                 
                 recordedUsernames.put(id, row.get(1));
+                nameIndex.put(row.get(1), id);
                 return true;
             }
 
@@ -101,25 +103,21 @@ public class UsernameCache
         recordedUsernamesLock.lock();
         
         try
-        {
-            for(Map.Entry<UUID, String> entry : recordedUsernames.entrySet())
-                if(entry.getValue().equalsIgnoreCase(username))
-                    return entry.getKey();
-            
-            return null;
-        }
+        { return nameIndex.get(username); }
         finally
         { recordedUsernamesLock.unlock(); }
     }
     
-    public String recordUsername(UUID playerId, String username)
+    public void recordUsername(UUID playerId, String username)
     {
         recordedUsernamesLock.lock();
         
         try
         {
             removeCachedUsername(username);
-            return recordedUsernames.put(playerId, username);
+            
+            nameIndex.put(username, playerId);
+            recordedUsernames.put(playerId, username);
         }
         finally
         { recordedUsernamesLock.unlock(); }
@@ -131,14 +129,10 @@ public class UsernameCache
         
         try
         {
-            Collection<UUID> toRemove = new ArrayList<UUID>();
+            UUID toRemove = nameIndex.remove(username);
             
-            for(Map.Entry<UUID, String> entry : recordedUsernames.entrySet())
-                if(username.equalsIgnoreCase(entry.getValue()))
-                    toRemove.add(entry.getKey());
-            
-            for(UUID id : toRemove)
-                recordedUsernames.remove(id);
+            if(toRemove != null)
+                recordedUsernames.remove(toRemove);
         }
         finally
         { recordedUsernamesLock.unlock(); }
