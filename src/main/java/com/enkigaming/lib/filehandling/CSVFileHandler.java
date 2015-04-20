@@ -144,22 +144,23 @@ public abstract class CSVFileHandler extends FileHandler
         {
             char iChar = toSplit.charAt(i);
             boolean printCharacter = true; // Whether or not the character should be printed into the current entry.
+            boolean thisCharShouldBeEscaped = nextCharIsEscaped;
+            nextCharIsEscaped = false;
             
             switch(iChar)
             {
                 case '\\':
                 {
-                    if(!nextCharIsEscaped)
+                    if(!thisCharShouldBeEscaped)
+                    {
                         printCharacter = false;
-                    
-                    nextCharIsEscaped = !nextCharIsEscaped;
+                        nextCharIsEscaped = true;
+                    }
                 } break;
                     
                 case ',':
                 {
-                    if(nextCharIsEscaped)
-                        nextCharIsEscaped = false;
-                    else if(positionStates.isEmpty())
+                    if(!thisCharShouldBeEscaped && positionStates.isEmpty())
                     {
                         entries.add(entryBuilder.toString());
                         entryBuilder = new StringBuilder();
@@ -169,9 +170,7 @@ public abstract class CSVFileHandler extends FileHandler
                     
                 case '\'':
                 {
-                    if(nextCharIsEscaped)
-                        nextCharIsEscaped = false;
-                    else
+                    if(!thisCharShouldBeEscaped)
                     {
                         boolean isOpening = true;
 
@@ -193,9 +192,10 @@ public abstract class CSVFileHandler extends FileHandler
                     
                 case '"':
                 {
-                    if(nextCharIsEscaped)
-                        nextCharIsEscaped = false;
-                    else if(lastCharIsEscapingQuote)
+                    if(thisCharShouldBeEscaped)
+                        break;
+                    
+                    if(lastCharIsEscapingQuote)
                         lastCharIsEscapingQuote = false;
                     else if(i < toSplit.length() - 1 && toSplit.charAt(i + 1) == '"')
                         lastCharIsEscapingQuote = true;
@@ -221,62 +221,59 @@ public abstract class CSVFileHandler extends FileHandler
                     
                 case '(':
                 {
-                    if(nextCharIsEscaped)
-                        nextCharIsEscaped = false;
-                    else
+                    if(!thisCharShouldBeEscaped)
                         positionStates.add(PositionState.inBrackets);
                 } break;
                     
                 case ')':
                 {
-                    for(int j = positionStates.size() - 1; j >= 0; j--)
-                        if(positionStates.get(j) == PositionState.inBrackets)
-                        {
-                            for(int k = positionStates.size() - 1; k >= j; k--)
-                                positionStates.remove(k);
-                            
-                            break;
-                        }
+                    if(!thisCharShouldBeEscaped)
+                        for(int j = positionStates.size() - 1; j >= 0; j--)
+                            if(positionStates.get(j) == PositionState.inBrackets)
+                            {
+                                for(int k = positionStates.size() - 1; k >= j; k--)
+                                    positionStates.remove(k);
+
+                                break;
+                            }
                 } break;
                     
                 case '[':
                 {
-                    if(nextCharIsEscaped)
-                        nextCharIsEscaped = false;
-                    else
+                    if(!thisCharShouldBeEscaped)
                         positionStates.add(PositionState.inSquareBrackets);
                 } break;
                     
                 case ']':
                 {
-                    for(int j = positionStates.size() - 1; j >= 0; j--)
-                        if(positionStates.get(j) == PositionState.inSquareBrackets)
-                        {
-                            for(int k = positionStates.size() - 1; k >= j; k--)
-                                positionStates.remove(k);
-                            
-                            break;
-                        }
+                    if(!thisCharShouldBeEscaped)
+                        for(int j = positionStates.size() - 1; j >= 0; j--)
+                            if(positionStates.get(j) == PositionState.inSquareBrackets)
+                            {
+                                for(int k = positionStates.size() - 1; k >= j; k--)
+                                    positionStates.remove(k);
+
+                                break;
+                            }
                 } break;
                     
                 case '{':
                 {
-                    if(nextCharIsEscaped)
-                        nextCharIsEscaped = false;
-                    else
+                    if(!thisCharShouldBeEscaped)
                         positionStates.add(PositionState.inCurlyBrackets);
                 } break;
                     
                 case '}':
                 {
-                    for(int j = positionStates.size() - 1; j >= 0; j--)
-                        if(positionStates.get(j) == PositionState.inCurlyBrackets)
-                        {
-                            for(int k = positionStates.size() - 1; k >= j; k--)
-                                positionStates.remove(k);
-                            
-                            break;
-                        }
+                    if(!thisCharShouldBeEscaped)
+                        for(int j = positionStates.size() - 1; j >= 0; j--)
+                            if(positionStates.get(j) == PositionState.inCurlyBrackets)
+                            {
+                                for(int k = positionStates.size() - 1; k >= j; k--)
+                                    positionStates.remove(k);
+
+                                break;
+                            }
                 } break;
             }
             

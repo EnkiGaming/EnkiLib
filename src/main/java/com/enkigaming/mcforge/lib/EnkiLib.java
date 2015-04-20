@@ -17,7 +17,21 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "2.0.3";
+    public static final String VERSION = "2.0.3.1";
+    
+    /*
+    Versioning:
+    
+    Increment first if major overhaul, or major breaking changes.
+    
+    Increment second for changes that change contracts/interfaces (such as adding new classes, etc.) and/or make minor
+    breaking changes in small/obscure ways that don't warrant a full major version increment.
+    
+    Increment third for changes that don't affect contracts/interfaces, or do but only in minor ways.
+    
+    Increment fourth for changes that fix/tweak something from the last release, and generally don't affect
+    interfaces/contracts.
+    */
     
     protected static EnkiLib instance;
     File saveFolder;
