@@ -129,10 +129,10 @@ public abstract class CSVFileHandler extends FileHandler
             lines.remove(i);
     }
     
-    private enum PositionState // Because Java doesn't support local enums.
+    private static enum PositionState // Because Java doesn't support local enums.
     { inQuotes, inInvertedCommas, inBrackets, inSquareBrackets, inCurlyBrackets, inChevronBrackets }
 
-    private List<String> splitCSVLine(String toSplit)
+    static List<String> splitCSVLine(String toSplit)
     {
         List<String> entries = new ArrayList<String>();
         boolean nextCharIsEscaped = false;
@@ -291,7 +291,7 @@ public abstract class CSVFileHandler extends FileHandler
      * marks into single ones, where they don't represent an empty field and the first quotation mark isn't escaped.
      * @param entries The list of entries to handle quotes in.
      */
-    private void handleQuotes(List<String> entries)
+    private static void handleQuotes(List<String> entries)
     {
         for(int i = 0; i < entries.size(); i++)
         {
