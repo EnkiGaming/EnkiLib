@@ -2,14 +2,16 @@ package com.enkigaming.mcforge.lib.compatability;
 
 import com.enkigaming.lib.events.exceptions.NoSuchUsernameException;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
+import com.enkigaming.mc.lib.compatability.EnkiWorld;
 import com.enkigaming.mcforge.lib.EnkiLib;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import org.apache.commons.lang3.NotImplementedException;
 
-public class ForgePlayer implements EnkiPlayer
+public class ForgePlayer extends EnkiPlayer
 {
     public ForgePlayer(UUID playerId)
     { this.playerId = playerId; }
@@ -84,4 +86,13 @@ public class ForgePlayer implements EnkiPlayer
         return null;
     }
 
+    @Override
+    public Integer getWorldId()
+    { return getPlatformSpecificInstance().worldObj.provider.dimensionId; }
+
+    @Override
+    public void teleportTo(int worldId, int x, int y, int z)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
 }
