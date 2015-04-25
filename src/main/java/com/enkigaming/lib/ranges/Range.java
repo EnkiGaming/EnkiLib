@@ -208,14 +208,6 @@ public interface Range<T extends Comparable<T>> // Place in EnkiLib
     List<Range<T>> splitBy(Collection<? extends T> splitPoints);
     
     /**
-     * Produces a copy of the current range, such that the returned value is the same type as the object .close was
-     * called on, and it returns an equal collection when .toListOfFlatRanges() is called.
-     * @return A copy of the range.
-     * @throws java.lang.CloneNotSupportedException
-     */
-    Range<T> clone() throws CloneNotSupportedException;
-    
-    /**
      * Returns true if all values covered by other are also covered by this, but no more. And vice versa.
      * @param other The range this is being compared against.
      * @return True if other is not null and covers all of the same values as this. Otherwise, false.
