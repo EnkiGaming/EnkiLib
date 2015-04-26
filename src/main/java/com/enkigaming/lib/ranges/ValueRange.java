@@ -150,7 +150,16 @@ public class ValueRange<T extends Comparable<T>> implements FlatRange<T>
 
     @Override
     public boolean isEnclosedBy(Range<? extends T> other)
-    { return other.getMin().compareTo(min) <= 0 && other.getMax().compareTo(max) >= 0; }
+    {
+        if(other instanceof FlatRange)
+            return other.getMin().compareTo(min) <= 0 && other.getMax().compareTo(max) >= 0;
+        
+        for(FlatRange<? extends T> i : other.toListOfFlatRanges())
+            if(i.getMin().compareTo(min) <= 0 && i.getMax().compareTo(max) >= 0)
+                return true;
+        
+        return false;
+    }
 
     @Override
     public List<FlatRange<T>> toListOfFlatRanges()
@@ -167,10 +176,8 @@ public class ValueRange<T extends Comparable<T>> implements FlatRange<T>
             return null;
         
         List<FlatRange<T>> overlaps = new ArrayList<FlatRange<T>>();
-        List<FlatRange<? extends T>> otherAsFlatRanges
-            = new ArrayList<FlatRange<? extends T>>(other.toListOfFlatRanges());
         
-        for(FlatRange<? extends T> i : otherAsFlatRanges)
+        for(FlatRange<? extends T> i : other.toListOfFlatRanges())
         {
             if(i.getMax().compareTo(min) < 0 || i.getMin().compareTo(max) > 0)
                 continue;
