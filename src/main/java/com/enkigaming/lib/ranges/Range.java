@@ -213,4 +213,16 @@ public interface Range<T extends Comparable<T>> // Place in EnkiLib
      * @return True if other is not null and covers all of the same values as this. Otherwise, false.
      */
     boolean coversTheSameValuesAs(Range<? extends T> other);
+    
+    /**
+     * Whether or not this range includes the value that marks its minimum bound.
+     * @return True if this range includes the value that marks its minimum bound. Otherwise, false.
+     */
+    boolean includesMin();
+    
+    /**
+     * Whether or not this range includes the value that marks its maximum bound.
+     * @return True if this range includes the value that marks its maximum bound. Otherwise, false.
+     */
+    boolean includesMax();
 }
