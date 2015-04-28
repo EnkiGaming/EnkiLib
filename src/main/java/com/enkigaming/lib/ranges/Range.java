@@ -225,4 +225,10 @@ public interface Range<T extends Comparable<T>> // Place in EnkiLib
      * @return True if this range includes the value that marks its maximum bound. Otherwise, false.
      */
     boolean includesMax();
+    
+    /**
+     * Whether or not this range represents a contiguous range of values.
+     * @return True if this range is contiguous. Otherwise, false.
+     */
+    boolean isFlat();
 }

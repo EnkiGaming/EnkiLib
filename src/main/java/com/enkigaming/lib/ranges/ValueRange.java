@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import org.apache.commons.lang3.NotImplementedException;
 
 public class ValueRange<T extends Comparable<T>> implements FlatRange<T>
 {
@@ -225,10 +224,12 @@ public class ValueRange<T extends Comparable<T>> implements FlatRange<T>
             T overlapMax = maxCompareResult > 0 ? max : i.getMax();
             
             boolean includeMin = minCompareResult == 0 ? includesMin || i.includesMin()
-                               : minCompareResult  < 0 ? includesMin  : i.includesMin();
+                               : minCompareResult  < 0 ? includesMin
+                               :                         i.includesMin();
             
             boolean includeMax = maxCompareResult == 0 ? includesMax || i.includesMax()
-                               : maxCompareResult  > 0 ? includesMax  : i.includesMax();
+                               : maxCompareResult  > 0 ? includesMax
+                               :                         i.includesMax();
             
             overlaps.add(new ValueRange<T>(overlapMin, includeMin, overlapMax, includeMax));
         }
@@ -267,108 +268,193 @@ public class ValueRange<T extends Comparable<T>> implements FlatRange<T>
     @Override
     public Range<T> exclude(Range<? extends T> other)
     {
-        if(otherIsAboveOrBelowThis(other))
+        if(other == null || otherIsAboveOrBelowThis(other))
             return this;
         
         if(other instanceof FlatRange)
         {
             FlatRange<? extends T> flatOther = (FlatRange<? extends T>)other;
             
+            int minCompareResult = flatOther.getMin().compareTo(min);
+            int maxCompareResult = flatOther.getMax().compareTo(max);
             
+            FlatRange<T> bottomHalf = null;
+            FlatRange<T> topHalf = null;
+            
+            if(minCompareResult > 0 || (minCompareResult == 0 && !flatOther.includesMin() && includesMin))
+                bottomHalf = new ValueRange<T>(min, includesMin, other.getMin(), !other.includesMin());
+            
+            if(maxCompareResult < 0 || (minCompareResult == 0 && !flatOther.includesMax() && includesMax))
+                topHalf = new ValueRange<T>(other.getMax(), !other.includesMax(), max, includesMax);
+            
+            return bottomHalf != null && topHalf != null ? new ExclusiveRange<T>(bottomHalf, topHalf)
+                 : bottomHalf == null && topHalf != null ? topHalf
+                 : bottomHalf != null && topHalf == null ? bottomHalf
+                 :                                         null;
         }
         
-        List<? extends FlatRange<? extends T>> otherAsFlatRanges = other.toListOfFlatRanges();
+        Range<T> result = this;
         
+        for(FlatRange<? extends T> i : other.toListOfFlatRanges())
+        {
+            result = result.exclude(i);
+            
+            if(result == null)
+                return null;
+        }
         
-//        List<? extends FlatRange<? extends T>> otherAsFlatRanges = other.toListOfFlatRanges();
-//        List<FlatRange<T>> results = new ArrayList<FlatRange<T>>();
-//        T lastExclusionTop = min;
-//        
-//        for(FlatRange<? extends T> i : otherAsFlatRanges)
-//        {
-//            if(otherIsAboveOrBelowThis(i))
-//                continue;
-//            
-//            /*
-//                continue writing...
-//            
-//                Start taking into account the passed range possibly including explicitly held values for inclusion.
-//            
-//                That is, ExclusiveRanges should include a list of values, in addition to the single values being held
-//                in the list as flat ranges with the same value as the min and max. Values explicitly excluded should
-//                be held in another list as well.
-//            
-//                This solves complications relating to getting mutated copies where individual values rather than ranges
-//                of values are at sensitive areas.
-//            */
-//        }
+        return result;
     }
 
     @Override
     public Range<T> excludeAll(Range<? extends T>... others)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Range<T> result = this;
+        
+        for(Range<? extends T> i : others)
+        {
+            result = result.exclude(i);
+            
+            if(result == null)
+                return null;
+        }
+        
+        return result;
     }
 
     @Override
     public Range<T> excludeAll(Collection<? extends Range<? extends T>> others)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Range<T> result = this;
+        
+        for(Range<? extends T> i : others)
+        {
+            result = result.exclude(i);
+            
+            if(result == null)
+                return null;
+        }
+        
+        return result;
     }
 
     @Override
     public Range<T> include(Range<? extends T> other)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(other == null)
+            return this;
+        
+        if(other instanceof FlatRange)
+        {
+            FlatRange<? extends T> flatOther = (FlatRange<? extends T>)other;
+            
+            if(otherIsAboveOrBelowThis(flatOther))
+                return new ExclusiveRange<T>(this, flatOther);
+            
+            int minCompareResult = flatOther.getMin().compareTo(min);
+            int maxCompareResult = flatOther.getMax().compareTo(max);
+            
+            boolean otherMinIsLess = minCompareResult < 0 || (minCompareResult == 0 && flatOther.includesMin() && !includesMin);
+            boolean otherMaxIsMore = maxCompareResult > 0 || (maxCompareResult == 0 && flatOther.includesMax() && !includesMax);
+            
+            T newMin = otherMinIsLess ? flatOther.getMin() : min;
+            T newMax = otherMaxIsMore ? flatOther.getMax() : max;
+            boolean includeMinInNew = otherMinIsLess ? flatOther.includesMin() : includesMin;
+            boolean includeMaxInNew = otherMaxIsMore ? flatOther.includesMax() : includesMax;
+            
+            return new ValueRange<T>(newMin, includeMinInNew, newMax, includeMaxInNew);
+        }
+        
+        Range<T> result = this;
+        
+        for(FlatRange<? extends T> i : other.toListOfFlatRanges())
+            result = result.include(i);
+        
+        return result;
     }
 
     @Override
     public Range<T> includeAll(Range<? extends T>... others)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Range<T> result = this;
+        
+        for(Range<? extends T> i : others)
+            result = result.include(i);
+        
+        return result;
     }
 
     @Override
     public Range<T> includeAll(Collection<? extends Range<? extends T>> others)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Range<T> result = this;
+        
+        for(Range<? extends T> i : others)
+            result = result.include(i);
+        
+        return result;
     }
 
     @Override
     public Range<T> includeValue(T toInclude)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int toIncludeComparedToMin = toInclude.compareTo(min);
+        int toIncludeComparedToMax = toInclude.compareTo(max);
+        
+        if((min.compareTo(max)     == 0 && toIncludeComparedToMin == 0)
+        || (toIncludeComparedToMin  > 0 && toIncludeComparedToMax  < 0)
+        || (toIncludeComparedToMin == 0 && includesMin)
+        || (toIncludeComparedToMax == 0 && includesMax))
+            return this; // If passed value is already in this range.
+        
+        if(toIncludeComparedToMin == 0)
+            return new ValueRange<T>(min, true, max, includesMax);
+        
+        if(toIncludeComparedToMax == 0)
+            return new ValueRange<T>(min, includesMin, max, true);
+        
+        return new ExclusiveRange<T>(this, new ValueRange<T>(toInclude, toInclude));
     }
 
     @Override
     public Range<T> includeAllValues(T... toInclude)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Range<T> result = this;
+        
+        for(T i : toInclude)
+            result = result.includeValue(i);
+        
+        return result;
     }
 
     @Override
     public Range<T> includeAllValues(Collection<? extends T> toInclude)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Range<T> result = this;
+        
+        for(T i : toInclude)
+            result = result.includeValue(i);
+        
+        return result;
     }
 
     @Override
     public boolean coversTheSameValuesAs(Range<? extends T> other)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return other.isFlat()
+            && other.getMin().compareTo(min) == 0
+            && other.getMax().compareTo(max) == 0
+            && other.includesMin() == includesMin
+            && other.includesMax() == includesMax;
     }
 
     @Override
     public boolean includesMin()
-    {
-        throw new NotImplementedException("Not implemented yet.");
-    }
+    { return includesMin; }
 
     @Override
     public boolean includesMax()
-    {
-        throw new NotImplementedException("Not implemented yet.");
-    }
+    { return includesMax; }
     
     /**
      * Checks if the other range's min or max values are outwith this range's min or max values with no overlap.
@@ -380,4 +466,8 @@ public class ValueRange<T extends Comparable<T>> implements FlatRange<T>
         return ((includesMax && other.includesMin()) ? other.getMin().compareTo(max) > 0 : other.getMin().compareTo(max) >= 0)  // If other's min is above this' max
             || ((includesMin && other.includesMax()) ? other.getMax().compareTo(min) < 0 : other.getMax().compareTo(min) <= 0); // If other's max is below this' min
     }
+
+    @Override
+    public boolean isFlat()
+    { return true; }
 }
