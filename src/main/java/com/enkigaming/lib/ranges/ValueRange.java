@@ -43,6 +43,13 @@ public class ValueRange<T extends Comparable<T>> implements FlatRange<T>
         includesMax = inclusiveOfMax;
     }
     
+    /**
+     * Creates a single-value flat range.
+     * @param value The value this range should cover.
+     */
+    public ValueRange(T value)
+    { this(value, value); }
+    
     protected final T min, max;
     
     // Whether or not this flat range is inclusive of its borders; if it includes the values that define its minimum
