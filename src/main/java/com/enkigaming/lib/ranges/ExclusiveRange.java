@@ -15,25 +15,73 @@ public class ExclusiveRange<T extends Comparable<T>> implements Range<T>
     { subranges = null; }
     
     public ExclusiveRange(T min, T max)
-    {}
+    { this(min, true, max, true); }
+    
+    public ExclusiveRange(T min, boolean includeMin, T max, boolean includeMax)
+    { subranges = Arrays.<FlatRange<T>>asList(new ValueRange<T>(min, includeMin, max, includeMax)); }
     
     public ExclusiveRange(Range<? extends T> source)
-    {}
+    {
+        subranges = new ArrayList<FlatRange<T>>();
+        
+        for(FlatRange<? extends T> i : source.toListOfFlatRanges())
+            subranges.add(new ValueRange<T>(i));
+    }
     
     public ExclusiveRange(Range<? extends T>... sources)
-    {}
+    {
+        if(sources == null || sources.length == 0)
+            throw new IllegalArgumentException("Cannot create an empty range.");
+        
+        Range<T> inner = new ExclusiveRange<T>(sources[0]);
+        
+        for(int i = 1; i < sources.length; i++)
+            inner = inner.include(sources[i]);
+        
+        subranges = inner.toListOfFlatRanges();
+    }
     
     public ExclusiveRange(Collection<? extends Range<? extends T>> sources)
-    {}
+    {
+        if(sources == null || sources.isEmpty())
+            throw new IllegalArgumentException("Cannot create an empty range.");
+        
+        Range<T> inner = null;
+        boolean first = true;
+        
+        for(Range<? extends T> i : sources)
+        {
+            if(first)
+            {
+                inner = new ExclusiveRange<T>(i);
+                first = false;
+                continue;
+            }
+            
+            inner = inner.include(i); // "dereferencing possible null pointer" shite.
+        }
+        
+        subranges = inner.toListOfFlatRanges(); // It's impossible for this to be null as well.
+    }
     
     public ExclusiveRange(T min, T max, Range<? extends T> toExclude)
-    {}
+    { this(min, true, max, true, toExclude); }
     
     public ExclusiveRange(T min, T max, Range<? extends T>... toExclude)
-    {}
+    { this(min, true, max, true, toExclude); }
     
     public ExclusiveRange(T min, T max, Collection<? extends Range<? extends T>> toExclude)
-    {}
+    { this(min, true, max, true, toExclude); }
+    
+    public ExclusiveRange(T min, boolean includeMin, T max, boolean includeMax, Range<? extends T> toExclude)
+    { subranges = new ValueRange<T>(min, includeMin, max, includeMax).exclude(toExclude).toListOfFlatRanges(); }
+    
+    public ExclusiveRange(T min, boolean includeMin, T max, boolean includeMax, Range<? extends T>... toExclude)
+    { subranges = new ValueRange<T>(min, includeMin, max, includeMax).excludeAll(toExclude).toListOfFlatRanges(); }
+    
+    public ExclusiveRange(T min, boolean includeMin, T max, boolean includeMax,
+                          Collection<? extends Range<? extends T>> toExclude)
+    { subranges = new ValueRange<T>(min, includeMin, max, includeMax).excludeAll(toExclude).toListOfFlatRanges(); }
     
     List<FlatRange<T>> subranges;
 
@@ -537,11 +585,48 @@ public class ExclusiveRange<T extends Comparable<T>> implements Range<T>
     public boolean isFlat()
     { return subranges.size() == 1; }
     
+    /**
+     * Ensures that all flatranges in the passed (sorted) list are separate, that all the same values are covered, but
+     * by single, contiguous, non-overlapping flat ranges.
+     * @param <T> The type of the flatranges involved.
+     * @param subranges The list of flat ranges in which to merge the overlapping ranges of.
+     */
     private static <T extends Comparable<T>> void mergeOverlappingSubranges(List<FlatRange<T>> subranges)
     {
-        
+        for(int i = 0; i < subranges.size(); i++)
+        {
+            FlatRange<T> iSubrange = subranges.get(i);
+            
+            for(int j = i + 1; j < subranges.size();)
+            {
+                FlatRange<T> jSubrange = subranges.get(j);
+                
+                if(iSubrange.contains(jSubrange.getMax()) // subrange I contains subrange J
+                || (iSubrange.getMax().compareTo(jSubrange.getMax()) == 0
+                    && !iSubrange.includesMax()
+                    && !jSubrange.includesMax()))
+                { subranges.remove(j); }
+                else if(jSubrange.contains(iSubrange.getMax()) // subrange I overlaps with subrange J
+                     || iSubrange.getMax().compareTo(jSubrange.getMax()) == 0 && iSubrange.includesMax()) // subrange I connects to (but doesn't overlap with) subrange j
+                {
+                    FlatRange<T> combined = new ValueRange<T>(iSubrange.getMin(), iSubrange.includesMin(),
+                                                              jSubrange.getMax(), jSubrange.includesMax());
+                    subranges.remove(j);
+                    subranges.remove(i);
+                    subranges.add(i, combined);
+                    iSubrange = combined;
+                }
+                else // subrange I doesn't doesn't make any contact with subrange J
+                { break; }
+            }
+        }
     }
     
+    /**
+     * Ensures that the list toSort is correctly sorted. Sorted using the minimum bound of the ranges.
+     * @param <T> The type of the ranges involved.
+     * @param toSort The list to sort.
+     */
     private static <T extends Comparable<T>> void sort(List<Range<T>> toSort)
     {
         Collections.sort(toSort, new Comparator<Range<T>>()
@@ -552,9 +637,16 @@ public class ExclusiveRange<T extends Comparable<T>> implements Range<T>
         });
     }
     
+    /**
+     * Inserts toInsert into the correct place in the sorted toInsertInto
+     * @param <T> The type of the flatranges concerned.
+     * @param toInsertInto The list having a value inserted.
+     * @param toInsert The value to insert into toInsertInto
+     */
     private static <T extends Comparable<T>> void insert(List<FlatRange<T>> toInsertInto, FlatRange<T> toInsert)
     {
-        SortedListHandler<FlatRange<T>> inserter = new SortedListHandler<FlatRange<T>>(new Transformer<FlatRange<T>, Comparable>()
+        SortedListHandler<FlatRange<T>> inserter
+            = new SortedListHandler<FlatRange<T>>(new Transformer<FlatRange<T>, Comparable>()
         {
             @Override
             public Comparable get(FlatRange<T> parent)
