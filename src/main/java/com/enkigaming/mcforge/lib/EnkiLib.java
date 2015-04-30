@@ -10,6 +10,7 @@ import com.enkigaming.mc.lib.compatability.EnkiWorld;
 import com.enkigaming.mcforge.lib.compatability.ForgeBlock;
 import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
 import com.enkigaming.mcforge.lib.compatability.ForgeWorld;
+import com.enkigaming.mcforge.lib.eventlisteners.SecondPassedEventListener;
 import com.enkigaming.mcforge.lib.registry.UsernameCache;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
@@ -24,7 +25,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "r1.0.0";
+    public static final String VERSION = "r1.0.1";
 
     /*
     Versioning:
@@ -38,7 +39,9 @@ public class EnkiLib
     overloads, etc.
     
     Increment third for changes that don't affect the public contract/interface. e.g. adding/modifying javadoc,
-    rewriting methods, changing implementations, fixing bugs in methods, etc.
+    rewriting methods, changing implementations, fixing bugs in methods, etc. Classes (creating, modifying, etc.) that
+    act purely as event handlers in forge's event system should be treated as implementation details, and thus only
+    warrant incrementing the third part of the version number rather than the second.
     */
     
     protected static EnkiLib instance;
@@ -57,6 +60,7 @@ public class EnkiLib
         fileHandling.load();
         FMLCommonHandler.instance().bus().register(new PlayerLogInForCachingEventListener());
         MinecraftForge.EVENT_BUS.register(new WorldSaveEventListener());
+        FMLCommonHandler.instance().bus().register(new SecondPassedEventListener());
         System.out.println("EnkiLib loaded!");
     }
     
