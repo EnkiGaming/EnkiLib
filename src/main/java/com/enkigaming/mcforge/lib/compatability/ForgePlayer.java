@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChatComponentText;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class ForgePlayer extends EnkiPlayer
@@ -93,6 +94,22 @@ public class ForgePlayer extends EnkiPlayer
     @Override
     public void teleportTo(int worldId, int x, int y, int z)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        EntityPlayer player = getPlatformSpecificInstance();
+        int currentWorldId = player.worldObj.provider.dimensionId;
+        
+        if(currentWorldId == worldId)
+            player.setPosition(x, y, z);
+        else
+            /* teleport player to position in dimension */
+            throw new NotImplementedException("Still need to implement teleporting players across dimensions.");
+    }
+    
+    @Override
+    public void print(String message)
+    {
+        EntityPlayer player = getPlatformSpecificInstance();
+        
+        if(player != null)
+            player.addChatMessage(new ChatComponentText(message));
     }
 }

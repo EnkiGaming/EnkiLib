@@ -1,10 +1,12 @@
 package com.enkigaming.mc.lib.pvp;
 
 import com.enkigaming.lib.events.Event;
+import com.enkigaming.lib.events.EventListener;
 import com.enkigaming.lib.events.StandardEvent;
 import com.enkigaming.lib.events.StandardEventArgs;
 import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
 import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
+import com.enkigaming.mc.lib.misc.TickCountdownTimer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.commons.lang3.NotImplementedException;
 
 public abstract class PvpGame
 {
@@ -25,6 +28,12 @@ public abstract class PvpGame
     {
         public GameState(String name)
         { this.name = name; }
+        
+        public GameState(String name, GameState substateOf)
+        {
+            this.name = name;
+            substateOf.addSubState(this); // Object is constructed at this point.
+        }
         
         protected String name;
         protected Set<GameState> subStates = new HashSet<GameState>();
@@ -69,7 +78,7 @@ public abstract class PvpGame
         a substate of "inGame" may be added and declared substate at the time of declaration with the following as
         example:
         
-        public final GameState inDeathMatch = new GameState("InDeathMatch"){{ this.addAsSubStateTo(inGame); }};
+        public final GameState inDeathMatch = new GameState("InDeathMatch", inGame);
         */
     }
     
@@ -98,20 +107,106 @@ public abstract class PvpGame
         }
     }
     
+    public static class GameStartedArgs extends StandardEventArgs
+    {
+        public GameStartedArgs(Collection<UUID> playersPlaying, String startingMessage)
+        {
+            this.playersPlaying = playersPlaying;
+            this.startingMessage = startingMessage;
+        }
+        
+        Collection<UUID> playersPlaying;
+        String startingMessage;
+        int gameTimeInMinutes;
+        
+        public Collection<UUID> getPlayers()
+        { return new HashSet<UUID>(playersPlaying); }
+        
+        public String getStartingMessage()
+        { return startingMessage; }
+        
+        public String setStartingMessage(String message)
+        {
+            String old = startingMessage;
+            startingMessage = message;
+            return old;
+        }
+        
+        public int getGameTimeInMinutes()
+        {
+            throw new NotImplementedException("Not implemented yet.");
+        }
+        
+        public int setGameTimeInMinutes(int minutes)
+        {
+            throw new NotImplementedException("Not implemented yet.");
+        }
+    }
+    
     public PvpGame()
     {
         players = new HashMap<UUID, PlayerGameState>();
         lobbySpawn = new BlockCoOrdinate();
         possibleGameStates = getNewGameStatesObject();
         gameState = possibleGameStates.waitingForNewGame;
+        lobbyTimer = new TickCountdownTimer(60);
+        gameTimer = new TickCountdownTimer(60);
+        
+        lobbyTimer.ticked.register(new EventListener<TickCountdownTimer.TickedArgs>()
+        {
+            @Override
+            public void onEvent(Object sender, TickCountdownTimer.TickedArgs args)
+            {
+                int secondsLeft = args.getNumberOfSecondsLeft();
+                
+                if(secondsLeft % 60 == 0 && secondsLeft != 0)
+                    messagePlayers(secondsLeft / 60 + " minutes until the game starts.");
+                else if(secondsLeft == 30 || secondsLeft == 20 || secondsLeft  > 10)
+                    messagePlayers(secondsLeft + " seconds to go.");
+            }
+        });
+        
+        lobbyTimer.finished.register(new EventListener<TickCountdownTimer.FinishedArgs>()
+        {
+            @Override
+            public void onEvent(Object sender, TickCountdownTimer.FinishedArgs args)
+            {
+                Collection<UUID> playersPlaying = new HashSet<UUID>(players.keySet());
+                String startMessage = "The game is starting.";
+                int gameTimeInMinutes = 30;
+                
+                GameStartedArgs startedArgs = new GameStartedArgs(playersPlaying, startMessage);
+                
+                try
+                {
+                    gameStarted.raise(this, startedArgs);
+                    messagePlayers(startedArgs.getStartingMessage());
+                    teams = getNewTeams(startedArgs.getPlayers());
+                    teleportPlayersToStartingPositions();
+                    
+                    for(UUID playerId : startedArgs.getPlayers())
+                        players.put(playerId, PlayerGameState.inGame);
+                    
+                    gameTimer.setTimeLeft(gameTimeInMinutes, 0);
+                    gameTimer.start();
+                }
+                finally
+                { gameStarted.raisePostEvent(this, startedArgs); }
+            }
+        });
+        
+        /* return gameTimer listeners here */
     }
     
     Map<UUID, PlayerGameState> players;
+    Collection<PvpTeam> teams;
     BlockCoOrdinate lobbySpawn;
     GameStates possibleGameStates;
     GameState gameState;
+    TickCountdownTimer lobbyTimer, gameTimer;
     
-    public static final Event<PlayerJoinedArgs> playerJoinedEvent = new StandardEvent<PlayerJoinedArgs>();
+    public static final Event<PlayerJoinedArgs> playerJoined = new StandardEvent<PlayerJoinedArgs>();
+    public static final Event<GameStartedArgs> gameStarted = new StandardEvent<GameStartedArgs>();
     
     public void teleportPlayersToLobby()
     {
@@ -131,7 +226,7 @@ public abstract class PvpGame
     public void addPlayer(UUID playerId)
     {
         PlayerJoinedArgs args = new PlayerJoinedArgs(playerId, lobbySpawn);
-        playerJoinedEvent.raise(this, args);
+        playerJoined.raise(this, args);
         
         try
         {
@@ -140,7 +235,7 @@ public abstract class PvpGame
                 CompatabilityAccess.getPlayer(playerId).teleportTo(args.getStartingPosition());
         }
         finally
-        { playerJoinedEvent.raisePostEvent(this, args); }
+        { playerJoined.raisePostEvent(this, args); }
     }
     
     public void removePlayer(UUID playerId)
@@ -152,7 +247,66 @@ public abstract class PvpGame
         CompatabilityAccess.getPlayer(playerId).teleportTo(whereToTpThem);
     }
     
-    public abstract BlockCoOrdinate getNewSpawnPointForPlayer(UUID playerId);
+    public void startLobbyCountdown()
+    {
+        lobbyTimer.setTimeLeft(5, 0);
+        lobbyTimer.start();
+    }
+    
+    public void startGameCountdown()
+    {
+        gameTimer.setTimeLeft(30, 0);
+        gameTimer.start();
+    }
+    
+    public void messagePlayers(String message)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    public void messageIngamePlayers(String message)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    public void messageLobbyPlayers(String message)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    /**
+     * Checks whether or not all passed players are on the same team.
+     * @param players The players to check.
+     * @return True if all players are on the same team. Otherwise, false.
+     */
+    public boolean playersAreOnSameTeam(UUID... players)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    public boolean teamIsStillInGame(PvpTeam team)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    public boolean thereIsMoreThanOneTeamInGame()
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    public void declareLoser(UUID player)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    public void declareWinner(PvpTeam team)
+    {
+        throw new NotImplementedException("Not implemented yet.");
+    }
+    
+    public abstract void teleportPlayersToStartingPositions();
     
     protected abstract GameStates getNewGameStatesObject();
+    
+    protected abstract Collection<PvpTeam> getNewTeams(Collection<UUID> players);
 }

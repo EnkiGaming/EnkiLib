@@ -22,4 +22,10 @@ public abstract class EnkiPlayer
     
     public void teleportTo(BlockCoOrdinate destination)
     { this.teleportTo(destination.getWorldId(), destination.getX(), destination.getY(), destination.getZ()); }
+    
+    /**
+     * Prints a message for a player in chat. (Such that only the player can see the message)
+     * @param message The text to be printed.
+     */
+    public abstract void print(String message);
 }

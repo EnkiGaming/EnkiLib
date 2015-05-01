@@ -7,7 +7,6 @@ import com.enkigaming.lib.events.StandardEvent;
 import com.enkigaming.lib.events.StandardEventArgs;
 import com.enkigaming.mc.lib.compatability.CompatabilityEvents;
 import com.enkigaming.mc.lib.compatability.CompatabilityEvents.SecondTickArgs;
-import org.apache.commons.lang3.NotImplementedException;
 
 public class TickCountdownTimer
 {
@@ -43,7 +42,7 @@ public class TickCountdownTimer
     
     int numberOfSecondsLeft;
     
-    final Object tickingBusy = new Object();
+    final Object secondsLeftBusy = new Object();
     
     EventListener<SecondTickArgs> secondPassedListener = new EventListener<SecondTickArgs>()
     {
@@ -53,8 +52,24 @@ public class TickCountdownTimer
         { tick(); }
     };
     
-    public static Event<TickedArgs> ticked = new StandardEvent<TickedArgs>();
-    public static Event<FinishedArgs> finished = new StandardEvent<FinishedArgs>();
+    public Event<TickedArgs> ticked = new StandardEvent<TickedArgs>();
+    public Event<FinishedArgs> finished = new StandardEvent<FinishedArgs>();
+    
+    public int setTimeLeft(int seconds)
+    {
+        synchronized(secondsLeftBusy)
+        {
+            int old = numberOfSecondsLeft;
+            numberOfSecondsLeft = seconds;
+            return old;
+        }
+    }
+    
+    public int setTimeLeft(int minutes, int seconds)
+    { return setTimeLeft((minutes * 60) + seconds); }
+    
+    public int setTimeLeft(int hours, int minutes, int seconds)
+    { return setTimeLeft((((hours * 60) + minutes) * 60) + seconds); }
     
     public void start()
     { CompatabilityEvents.secondPassed.register(ListenerPriority.Monitor, secondPassedListener); }
@@ -74,15 +89,15 @@ public class TickCountdownTimer
         finally
         {
             try
-            { finished.raisePostEvent(tickingBusy, args); }
+            { finished.raisePostEvent(secondsLeftBusy, args); }
             finally
             { CompatabilityEvents.secondPassed.deregister(secondPassedListener); }
         }
     }
     
-    public void tick()
+    protected void tick()
     {
-        synchronized(tickingBusy)
+        synchronized(secondsLeftBusy)
         {
             TickedArgs args = new TickedArgs(numberOfSecondsLeft - 1);
 
