@@ -7,11 +7,13 @@ import com.enkigaming.lib.events.StandardEventArgs;
 import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
 import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
 import com.enkigaming.mc.lib.misc.TickCountdownTimer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang3.NotImplementedException;
@@ -109,15 +111,27 @@ public abstract class PvpGame
     
     public static class GameStartedArgs extends StandardEventArgs
     {
-        public GameStartedArgs(Collection<UUID> playersPlaying, String startingMessage)
+        public GameStartedArgs(Collection<UUID> playersPlaying,
+                               Collection<PvpTeam> teamsPlaying,
+                               GameState initialGameState,
+                               String startingMessage,
+                               int gameTimeInMinutes,
+                               int minTeamsRequired)
         {
-            this.playersPlaying = playersPlaying;
-            this.startingMessage = startingMessage;
+            this.playersPlaying    = playersPlaying;
+            this.teamsPlaying      = teamsPlaying;
+            this.startingMessage   = startingMessage;
+            this.gameTimeInMinutes = gameTimeInMinutes;
+            this.minTeamsRequired  = minTeamsRequired;
+            this.initialGameState  = initialGameState;
         }
         
         Collection<UUID> playersPlaying;
+        Collection<PvpTeam> teamsPlaying;
+        GameState initialGameState;
         String startingMessage;
         int gameTimeInMinutes;
+        int minTeamsRequired;
         
         public Collection<UUID> getPlayers()
         { return new HashSet<UUID>(playersPlaying); }
@@ -141,6 +155,52 @@ public abstract class PvpGame
         {
             throw new NotImplementedException("Not implemented yet.");
         }
+        
+        public Collection<PvpTeam> getTeamsPlaying()
+        { return teamsPlaying; }
+        
+        public int getMinimumTeamsRequiredToStart()
+        { return minTeamsRequired; }
+        
+        public GameState getInitialGameState()
+        { return initialGameState; }
+        
+        public GameState setInitialGameState(GameState newState)
+        {
+            GameState old = initialGameState;
+            initialGameState = newState;
+            return old;
+        }
+    }
+    
+    public static class GameFinishedArgs extends StandardEventArgs
+    {
+        public GameFinishedArgs(PvpTeam winningTeam, Collection<UUID> remainingPlayers, String gameOverMessage)
+        {
+            this.winningTeam = winningTeam;
+            this.remainingPlayers = remainingPlayers;
+            this.gameOverMessage = gameOverMessage;
+        }
+        
+        PvpTeam winningTeam;
+        Collection<UUID> remainingPlayers;
+        String gameOverMessage;
+        
+        public PvpTeam getWinningTeam()
+        { return winningTeam; }
+        
+        public Collection<UUID> getRemainingPlayers()
+        { return remainingPlayers; }
+        
+        public String getGameOverMessage()
+        { return gameOverMessage; }
+        
+        public String setGameOverMessage(String newMessage)
+        {
+            String old = gameOverMessage;
+            gameOverMessage = newMessage;
+            return old;
+        }
     }
     
     public PvpGame()
@@ -151,6 +211,7 @@ public abstract class PvpGame
         gameState = possibleGameStates.waitingForNewGame;
         lobbyTimer = new TickCountdownTimer(60);
         gameTimer = new TickCountdownTimer(60);
+        minNumberOfTeams = 2;
         
         lobbyTimer.ticked.register(new EventListener<TickCountdownTimer.TickedArgs>()
         {
@@ -170,29 +231,7 @@ public abstract class PvpGame
         {
             @Override
             public void onEvent(Object sender, TickCountdownTimer.FinishedArgs args)
-            {
-                Collection<UUID> playersPlaying = new HashSet<UUID>(players.keySet());
-                String startMessage = "The game is starting.";
-                int gameTimeInMinutes = 30;
-                
-                GameStartedArgs startedArgs = new GameStartedArgs(playersPlaying, startMessage);
-                
-                try
-                {
-                    gameStarted.raise(this, startedArgs);
-                    messagePlayers(startedArgs.getStartingMessage());
-                    teams = getNewTeams(startedArgs.getPlayers());
-                    teleportPlayersToStartingPositions();
-                    
-                    for(UUID playerId : startedArgs.getPlayers())
-                        players.put(playerId, PlayerGameState.inGame);
-                    
-                    gameTimer.setTimeLeft(gameTimeInMinutes, 0);
-                    gameTimer.start();
-                }
-                finally
-                { gameStarted.raisePostEvent(this, startedArgs); }
-            }
+            { startGame(); }
         });
         
         /* return gameTimer listeners here */
@@ -204,6 +243,7 @@ public abstract class PvpGame
     GameStates possibleGameStates;
     GameState gameState;
     TickCountdownTimer lobbyTimer, gameTimer;
+    int minNumberOfTeams;
     
     public static final Event<PlayerJoinedArgs> playerJoined = new StandardEvent<PlayerJoinedArgs>();
     public static final Event<GameStartedArgs> gameStarted = new StandardEvent<GameStartedArgs>();
@@ -223,19 +263,28 @@ public abstract class PvpGame
     public GameState getCurrentGameState()
     { return gameState; }
     
-    public void addPlayer(UUID playerId)
+    public boolean addPlayer(UUID playerId)
     {
         PlayerJoinedArgs args = new PlayerJoinedArgs(playerId, lobbySpawn);
         playerJoined.raise(this, args);
+        boolean added;
         
         try
         {
-            players.put(playerId, PlayerGameState.inLobby);
-            if(args.getStartingPosition() != null)
-                CompatabilityAccess.getPlayer(playerId).teleportTo(args.getStartingPosition());
+            if(!args.isCancelled())
+            {
+                added = true;
+                players.put(playerId, PlayerGameState.inLobby);
+                if(args.getStartingPosition() != null)
+                    CompatabilityAccess.getPlayer(playerId).teleportTo(args.getStartingPosition());
+            }
+            else
+                added = false;
         }
         finally
         { playerJoined.raisePostEvent(this, args); }
+        
+        return added;
     }
     
     public void removePlayer(UUID playerId)
@@ -247,31 +296,87 @@ public abstract class PvpGame
         CompatabilityAccess.getPlayer(playerId).teleportTo(whereToTpThem);
     }
     
-    public void startLobbyCountdown()
+    public void startLobbyCountdown(int minutes)
     {
-        lobbyTimer.setTimeLeft(5, 0);
+        lobbyTimer.setTimeLeft(minutes, 0);
         lobbyTimer.start();
     }
     
-    public void startGameCountdown()
+    public void startGameCountdown(int minutes)
     {
-        gameTimer.setTimeLeft(30, 0);
+        gameTimer.setTimeLeft(minutes, 0);
         gameTimer.start();
+    }
+    
+    public void startGame()
+    {
+        String startMessage = "The game is starting.";
+        int gameTimeInMinutes = 30;
+        boolean abort = false;
+
+        GameStartedArgs startedArgs = new GameStartedArgs(new HashSet<UUID>(players.keySet()),
+                                                          null, // filled in later down.
+                                                          possibleGameStates.inGame,
+                                                          startMessage,
+                                                          gameTimeInMinutes,
+                                                          minNumberOfTeams);
+
+        try
+        {
+            teams = getNewTeams(startedArgs.getPlayers());
+            startedArgs.teamsPlaying = new HashSet<PvpTeam>(teams);
+                
+            if(teams.size() < minNumberOfTeams)
+            {
+                startedArgs.setStartingMessage("Not enough players to start.");
+                abort = true;
+            }
+            
+            gameStarted.raise(this, startedArgs);
+            
+            if(!startedArgs.isCancelled())
+            {
+                messagePlayers(startedArgs.getStartingMessage());
+                
+                if(!abort)
+                {
+                    gameState = startedArgs.getInitialGameState();
+                    teleportPlayersToStartingPositions();
+
+                    for(UUID playerId : startedArgs.getPlayers())
+                        players.put(playerId, PlayerGameState.inGame);
+
+                    startGameCountdown(startedArgs.getGameTimeInMinutes());
+                }
+            }
+            else
+                abort = true;
+        }
+        finally
+        { gameStarted.raisePostEvent(this, startedArgs); }
+        
+        if(abort)
+            startLobbyCountdown(5);
     }
     
     public void messagePlayers(String message)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        for(UUID playerId : players.keySet())
+            CompatabilityAccess.getPlayer(playerId).print(message);
     }
     
     public void messageIngamePlayers(String message)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        for(Entry<UUID, PlayerGameState> player : players.entrySet())
+            if(player.getValue() == PlayerGameState.inGame)
+                CompatabilityAccess.getPlayer(player.getKey()).print(message);
     }
     
     public void messageLobbyPlayers(String message)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        for(Entry<UUID, PlayerGameState> player : players.entrySet())
+            if(player.getValue() == PlayerGameState.inLobby)
+                CompatabilityAccess.getPlayer(player.getKey()).print(message);
     }
     
     /**
@@ -281,27 +386,66 @@ public abstract class PvpGame
      */
     public boolean playersAreOnSameTeam(UUID... players)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        for(PvpTeam team : teams)
+        {
+            if(team.containsAllPlayers(players))
+                return true;
+            
+            if(team.containsAnyPlayers(players)) // Operating on the assumption that a player can't be in >1 team.
+                return false;
+        }
+        
+        return false;
     }
     
     public boolean teamIsStillInGame(PvpTeam team)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        for(UUID id : team.getPlayers())
+            if(players.get(id) == PlayerGameState.inGame)
+                return true;
+        
+        return false;
     }
     
     public boolean thereIsMoreThanOneTeamInGame()
     {
-        throw new NotImplementedException("Not implemented yet.");
+        int teamsInGame = 0;
+        
+        for(PvpTeam team : teams)
+            if(teamIsStillInGame(team))
+                if(++teamsInGame > 1)
+                    return true;
+        
+        return false;
     }
     
     public void declareLoser(UUID player)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        players.put(player, PlayerGameState.inLobby);
+        teleportPlayerToLobby(player);
+        declareRemainingTeamWinnerIfOnlyOneLeft();
     }
     
     public void declareWinner(PvpTeam team)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        
+    }
+    
+    public void declareRemainingTeamWinnerIfOnlyOneLeft()
+    {
+        PvpTeam currentWinningTeam = null;
+        
+        for(PvpTeam team : teams)
+            if(teamIsStillInGame(team))
+                if(currentWinningTeam == null)
+                    currentWinningTeam = team;
+                else
+                    return;
+        
+        if(currentWinningTeam == null)
+            return;
+        
+        declareWinner(currentWinningTeam);
     }
     
     public abstract void teleportPlayersToStartingPositions();
