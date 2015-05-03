@@ -245,8 +245,8 @@ public abstract class PvpGame
     TickCountdownTimer lobbyTimer, gameTimer;
     int minNumberOfTeams;
     
-    public static final Event<PlayerJoinedArgs> playerJoined = new StandardEvent<PlayerJoinedArgs>();
-    public static final Event<GameStartedArgs> gameStarted = new StandardEvent<GameStartedArgs>();
+    public final Event<PlayerJoinedArgs> playerJoined = new StandardEvent<PlayerJoinedArgs>();
+    public final Event<GameStartedArgs> gameStarted = new StandardEvent<GameStartedArgs>();
     
     public void teleportPlayersToLobby()
     {

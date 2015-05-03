@@ -4,12 +4,14 @@ import com.enkigaming.lib.events.exceptions.NoSuchUsernameException;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
 import com.enkigaming.mc.lib.compatability.EnkiWorld;
 import com.enkigaming.mcforge.lib.EnkiLib;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class ForgePlayer extends EnkiPlayer

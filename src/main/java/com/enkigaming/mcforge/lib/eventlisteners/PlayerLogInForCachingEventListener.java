@@ -10,6 +10,6 @@ public class PlayerLogInForCachingEventListener
     public void onPlayerLogIn(PlayerEvent.PlayerLoggedInEvent event)
     {
         EnkiLib.getInstance().getUsernameCache().recordUsername(event.player.getGameProfile().getId(),
-                                                              event.player.getGameProfile().getName());
+                                                                event.player.getGameProfile().getName());
     }
 }
