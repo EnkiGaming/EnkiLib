@@ -2,10 +2,12 @@ package com.enkigaming.mcforge.lib.eventlisteners;
 
 import com.enkigaming.lib.events.Event;
 import com.enkigaming.lib.events.EventArgs;
+import com.enkigaming.lib.events.EventMethods;
 import com.enkigaming.lib.tuples.Pair;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer.DiedArgs;
 import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -19,26 +21,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 public class PlayerDeathPostListener
 {
-//    Map<UUID, Collection<WeakReference<Event<EnkiPlayer.DiedArgs>>>> eventsToRaise
-//        = new HashMap<UUID, Collection<WeakReference<Event<EnkiPlayer.DiedArgs>>>>();
-//    
-//    final Object eventsToRaiseBusy = new Object();
-//    
-//    public void addEventToRaise(UUID playerId, Event<EnkiPlayer.DiedArgs> diedEvent)
-//    {
-//        synchronized(eventsToRaiseBusy)
-//        {
-//            Collection<WeakReference<Event<EnkiPlayer.DiedArgs>>> eventsForPlayer = eventsToRaise.get(playerId);
-//            
-//            if(eventsForPlayer == null)
-//            {
-//                eventsForPlayer = new HashSet<WeakReference<Event<EnkiPlayer.DiedArgs>>>();
-//                eventsToRaise.put(playerId, eventsForPlayer);
-//            }
-//            
-//            eventsForPlayer.add(new WeakReference<Event<EnkiPlayer.DiedArgs>>(diedEvent));
-//        }
-//    }
+    public static final PlayerDeathPostListener instance = new PlayerDeathPostListener();
     
     Map<WeakReference<ForgePlayer>, DiedArgs> waitingArgs = new HashMap<WeakReference<ForgePlayer>, DiedArgs>();
     
@@ -68,13 +51,16 @@ public class PlayerDeathPostListener
         }
     }
     
-    @SubscribeEvent
+    // Still pre-event priority, just later, because forge provides literally no way of listening to a living entity
+    // death event post-event, without patching my own events into the source.
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerDeathPost(LivingDeathEvent event)
     {
         if(!(event.entity instanceof EntityPlayer))
             return;
         
         Collection<Pair<Event<?>, EventArgs>> toRaise = new HashSet<Pair<Event<?>, EventArgs>>();
+        UUID playerId = ((EntityPlayer)event.entity).getGameProfile().getId();
         
         synchronized(waitingArgsBusy)
         {
@@ -82,8 +68,13 @@ public class PlayerDeathPostListener
             
             for(Entry<WeakReference<ForgePlayer>, DiedArgs> playerAndArgs : waitingArgs.entrySet())
             {
-                /* continue writing. */
+                ForgePlayer player = playerAndArgs.getKey().get();
+                
+                if(player != null && player.getId().equals(playerId))
+                    toRaise.add(new Pair<Event<?>, EventArgs>(player.died, playerAndArgs.getValue()));
             }
         }
+        
+        EventMethods.raiseMultiple(this, toRaise);
     }
 }

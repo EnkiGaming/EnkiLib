@@ -4,6 +4,7 @@ import com.enkigaming.lib.events.exceptions.NoSuchUsernameException;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
 import com.enkigaming.mc.lib.compatability.EnkiWorld;
 import com.enkigaming.mcforge.lib.EnkiLib;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPreListener;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,10 @@ import org.apache.commons.lang3.NotImplementedException;
 public class ForgePlayer extends EnkiPlayer
 {
     public ForgePlayer(UUID playerId)
-    { this.playerId = playerId; }
+    {
+        this.playerId = playerId;
+        initialiseEvents();
+    }
     
     public ForgePlayer(String Username)
     {
@@ -25,7 +29,10 @@ public class ForgePlayer extends EnkiPlayer
         playerId = EnkiLib.getLastRecordedIDForName(Username);
         
         if(playerId != null)
+        {
+            initialiseEvents();
             return;
+        }
         
         // Attempt to get UUID from online players.
         List<EntityPlayer> playersOnline
@@ -35,6 +42,7 @@ public class ForgePlayer extends EnkiPlayer
             if(i.getGameProfile().getName().equalsIgnoreCase(Username))
             {
                 playerId = i.getGameProfile().getId();
+                initialiseEvents();
                 return;
             }
         
@@ -43,7 +51,13 @@ public class ForgePlayer extends EnkiPlayer
     }
     
     public ForgePlayer(EntityPlayer player)
-    { playerId = player.getGameProfile().getId(); }
+    {
+        playerId = player.getGameProfile().getId();
+        initialiseEvents();
+    }
+    
+    public void initialiseEvents()
+    { PlayerDeathPreListener.instance.addEventToRaise(this); }
     
     UUID playerId;
     

@@ -10,6 +10,8 @@ import com.enkigaming.mc.lib.compatability.EnkiWorld;
 import com.enkigaming.mcforge.lib.compatability.ForgeBlock;
 import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
 import com.enkigaming.mcforge.lib.compatability.ForgeWorld;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPostListener;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPreListener;
 import com.enkigaming.mcforge.lib.eventlisteners.SecondPassedEventListener;
 import com.enkigaming.mcforge.lib.registry.UsernameCache;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -25,7 +27,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "r1.0.1";
+    public static final String VERSION = "r1.1.3";
 
     /*
     Versioning:
@@ -58,9 +60,7 @@ public class EnkiLib
         usernameCache = new UsernameCache(saveFolder);
         fileHandling.register(usernameCache.getFileHandler());
         fileHandling.load();
-        FMLCommonHandler.instance().bus().register(new PlayerLogInForCachingEventListener());
-        MinecraftForge.EVENT_BUS.register(new WorldSaveEventListener());
-        FMLCommonHandler.instance().bus().register(new SecondPassedEventListener());
+        registerEvents();
         System.out.println("EnkiLib loaded!");
     }
     
@@ -89,6 +89,16 @@ public class EnkiLib
             public EnkiWorld getWorld(int worldId)
             { return new ForgeWorld(worldId); }
         });
+    }
+    
+    private void registerEvents()
+    {
+        MinecraftForge.EVENT_BUS.register(PlayerDeathPreListener.instance);
+        MinecraftForge.EVENT_BUS.register(PlayerDeathPostListener.instance);
+        
+        FMLCommonHandler.instance().bus().register(new PlayerLogInForCachingEventListener());
+        MinecraftForge.EVENT_BUS.register(new WorldSaveEventListener());
+        FMLCommonHandler.instance().bus().register(new SecondPassedEventListener());
     }
     
     //========== Convenience Methods ==========

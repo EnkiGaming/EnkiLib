@@ -6,6 +6,7 @@ import com.enkigaming.lib.events.EventMethods;
 import com.enkigaming.lib.tuples.Pair;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer.DiedArgs;
 import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -18,6 +19,8 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 public class PlayerDeathPreListener
 {
+    public static final PlayerDeathPreListener instance = new PlayerDeathPreListener(PlayerDeathPostListener.instance);
+    
     public PlayerDeathPreListener(PlayerDeathPostListener partner)
     { postEventPartner = partner; }
     
@@ -45,27 +48,26 @@ public class PlayerDeathPreListener
         }
     }
     
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public void onPlayerDeathPre(LivingDeathEvent event)
     {
+        UUID playerId = ((EntityPlayer)event.entity).getGameProfile().getId();
+        Collection<Pair<Event<?>, EventArgs>> eventsToRaise = new HashSet<Pair<Event<?>, EventArgs>>();
+        
+        Map<WeakReference<ForgePlayer>, DiedArgs> argsForPostEvent
+                = new HashMap<WeakReference<ForgePlayer>, DiedArgs>();
+        
         synchronized(eventsToRaiseBusy)
         {
             if(!(event.entity instanceof EntityPlayer))
                 return;
             
-            UUID playerId = ((EntityPlayer)event.entity).getGameProfile().getId();
-            //Collection<WeakReference<Event<DiedArgs>>> eventsForPlayer = eventsToRaise.get(playerId);
             Collection<WeakReference<ForgePlayer>> playersToRaise = players.get(playerId);
 
             if(playersToRaise == null)
                 return;
 
             Collection<WeakReference<ForgePlayer>> toRemove = null;
-            
-            Map<WeakReference<ForgePlayer>, DiedArgs> argsForPostEvent
-                = new HashMap<WeakReference<ForgePlayer>, DiedArgs>();
-            
-            Collection<Pair<Event<?>, EventArgs>> eventsToRaise = new HashSet<Pair<Event<?>, EventArgs>>();
             
             for(WeakReference<ForgePlayer> ref : playersToRaise)
             {
@@ -84,10 +86,10 @@ public class PlayerDeathPreListener
                 eventsToRaise.add(new Pair<Event<?>, EventArgs>(playerToRaise.died, args));
                 argsForPostEvent.put(ref, args);
             }
-            
-            EventMethods.raiseMultiple(this, true, eventsToRaise);
-            
-            postEventPartner.addArgsForPostEvent(argsForPostEvent);
         }
+            
+        EventMethods.raiseMultiple(this, true, eventsToRaise);
+
+        postEventPartner.addArgsForPostEvent(argsForPostEvent);
     }
 }
