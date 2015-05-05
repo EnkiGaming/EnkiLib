@@ -15,4 +15,7 @@ public abstract class EnkiBlock extends BlockCoOrdinate
     
     public EnkiBlock(int worldId, int x, int y, int z)
     { super(worldId, x, y, z); }
+    
+    public EnkiBlock(BlockCoOrdinate blockCoOrd)
+    { super(blockCoOrd.getWorldId(), blockCoOrd.getX(), blockCoOrd.getY(), blockCoOrd.getZ()); }
 }

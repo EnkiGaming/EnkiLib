@@ -11,6 +11,7 @@ public class CompatabilityAccess
         EnkiPlayer getPlayer(UUID playerId);
         EnkiBlock getBlock(int worldId, int x, int y, int z);
         EnkiWorld getWorld(int worldId);
+        EnkiServer getServer();
     }
     
     static Getter getter;
@@ -23,6 +24,9 @@ public class CompatabilityAccess
     
     public static EnkiWorld getWorld(int worldId)
     { return getter.getWorld(worldId); }
+    
+    public static EnkiServer getServer()
+    { return getter.getServer(); }
     
     public static void setGetter(Getter newGetter)
     { getter = newGetter; }

@@ -1,6 +1,7 @@
 package com.enkigaming.mcforge.lib.compatability;
 
 import com.enkigaming.mc.lib.compatability.EnkiBlock;
+import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
 
 public class ForgeBlock extends EnkiBlock
 {
@@ -15,4 +16,7 @@ public class ForgeBlock extends EnkiBlock
     
     public ForgeBlock(int worldId, int x, int y, int z)
     { super(worldId, x, y, z); }
+    
+    public ForgeBlock(BlockCoOrdinate blockCoOrd)
+    { super(blockCoOrd); }
 }
