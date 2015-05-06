@@ -185,6 +185,21 @@ public interface Event<T extends EventArgs>
      * the same.
      * @param sender The object in which the event was raised.
      * @param args The object encapsulating relevant properties of the event raise.
+     * @param otherEvents The events to raise alongside this one (as the keys) and the args to pass to them. (as values)
+     */
+    public void raiseAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents);
+    
+    /**
+     * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
+     * all dependent events, and event listener priorities are respected.
+     *
+     * For implementations: Marks all event args used in this as using pre-event before doing anything with them and
+     * used pre-event once it's finished. Should store the listener queues for each set of args and their dependent
+     * args in the master args to be collated, so that this method can be called from any of the events and, as long as
+     * all of the same events used are passed in barring the one the method is being called on, the results should be
+     * the same.
+     * @param sender The object in which the event was raised.
+     * @param args The object encapsulating relevant properties of the event raise.
      * @param shareCancellation whether to share the cancellation state between the different passed events or not.
      * @param otherEvent The event to raise alongside this one and the args to pass to it.
      */
@@ -221,6 +236,22 @@ public interface Event<T extends EventArgs>
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
     public void raiseAlongside(Object sender, T args, boolean shareCancellation, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
+    
+    /**
+     * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
+     * all dependent events, and event listener priorities are respected.
+     *
+     * For implementations: Marks all event args used in this as using pre-event before doing anything with them and
+     * used pre-event once it's finished. Should store the listener queues for each set of args and their dependent
+     * args in the master args to be collated, so that this method can be called from any of the events and, as long as
+     * all of the same events used are passed in barring the one the method is being called on, the results should be
+     * the same.
+     * @param sender The object in which the event was raised.
+     * @param args The object encapsulating relevant properties of the event raise.
+     * @param shareCancellation whether to share the cancellation state between the different passed events or not.
+     * @param otherEvents The events to raise alongside this one (as the keys) and the args to pass to them. (as values)
+     */
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents);
     
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
@@ -260,6 +291,19 @@ public interface Event<T extends EventArgs>
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
     public void raisePostEventAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
+    
+    /**
+     * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
+     * alongside all dependent events, and event listener priorities are respected.
+     *
+     * for implementations: Marks all event args used in this as using post-event before doing anything with them and
+     * used post-event once it's finished. The listener queues stored on each passed event args should hold the
+     * listeners previously called by the event arg's pre-event raise, including those of dependent event args.
+     * @param sender The object in which the event was raised.
+     * @param args The object encapsulating relevant properties of the event raise.
+     * @param otherEvents The events to raise alongside this one (as the keys) and the args to pass to them. (as values)
+     */
+    public void raisePostEventAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents);
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="Mutators">

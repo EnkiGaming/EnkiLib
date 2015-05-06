@@ -1,5 +1,6 @@
 package com.enkigaming.lib.events;
 
+import com.enkigaming.lib.collections.CollectionMethods;
 import com.enkigaming.lib.collections.CombinedQueue;
 import com.enkigaming.lib.collections.SortedQueue;
 import static com.enkigaming.lib.convenience.SanityChecks.*;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class StandardEvent<T extends EventArgs> implements Event<T>
 {
@@ -209,6 +211,10 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     @Override
     public void raiseAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<?>, EventArgs>> otherEvents)
     { raiseAlongside(sender, args, true, otherEvents); }
+    
+    @Override
+    public void raiseAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
+    { throw new NotImplementedException("Not implemented yet."); }
 
     @Override
     public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<?>, EventArgs> otherEvent)
@@ -269,6 +275,9 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
             i.getSecond().getTechnicalAccessor().markAsUsedPreEvent();
     }
+    
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
+    { throw new NotImplementedException("Not implemented yet."); }
 
     @Override
     public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<?>, EventArgs> otherEvent)
@@ -327,6 +336,9 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
             i.getSecond().getTechnicalAccessor().markAsUsedPostEvent();
     }
+    
+    public void raisePostEventAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
+    { throw new NotImplementedException("Not implemented yet."); }
 
     @Override
     public void register(EventListener<T> listener)
