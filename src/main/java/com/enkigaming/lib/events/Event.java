@@ -142,7 +142,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvent The event to raise alongside this one and the args to pass to it.
      */
-    public void raiseAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs> otherEvent);
+    public void raiseAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvent);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -157,7 +157,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs>... otherEvents);
+    public void raiseAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, ? extends EventArgs>... otherEvents);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -172,7 +172,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
+    public void raiseAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<? extends EventArgs>, ? extends EventArgs>> otherEvents);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -203,7 +203,7 @@ public interface Event<T extends EventArgs>
      * @param shareCancellation whether to share the cancellation state between the different passed events or not.
      * @param otherEvent The event to raise alongside this one and the args to pass to it.
      */
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<? extends EventArgs>, EventArgs> otherEvent);
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvent);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -219,7 +219,7 @@ public interface Event<T extends EventArgs>
      * @param shareCancellation whether to share the cancellation state between the different passed events or not.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<? extends EventArgs>, EventArgs>... otherEvents);
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<? extends EventArgs>, ? extends EventArgs>... otherEvents);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -235,7 +235,7 @@ public interface Event<T extends EventArgs>
      * @param shareCancellation whether to share the cancellation state between the different passed events or not.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Collection<? extends Pair<? extends Event<? extends EventArgs>, ? extends EventArgs>> otherEvents);
     
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
@@ -264,7 +264,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvent The event to raise alongside this one and the args to pass to it.
      */
-    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs> otherEvent);
+    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvent);
     
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
@@ -277,7 +277,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, EventArgs>... otherEvents);
+    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<? extends EventArgs>, ? extends EventArgs>... otherEvents);
     
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
@@ -290,7 +290,7 @@ public interface Event<T extends EventArgs>
      * @param args The object encapsulating relevant properties of the event raise.
      * @param otherEvents The events to raise alongside this one and the args to pass to them.
      */
-    public void raisePostEventAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<? extends EventArgs>, EventArgs>> otherEvents);
+    public void raisePostEventAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<? extends EventArgs>, ? extends EventArgs>> otherEvents);
     
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
@@ -317,9 +317,19 @@ public interface Event<T extends EventArgs>
     
     public void register(EventListener<T>... listeners);
     
+    public void register(Collection<EventListener<T>> listeners);
+    
     public void register(EventListener<T> listener, double priority);
     
     public void register(EventListener<T> listener, ListenerPriority priority);
+    
+    public void register(EventListener<T>[] listeners, double priority);
+    
+    public void register(EventListener<T>[] listeners, ListenerPriority priority);
+    
+    public void register(Collection<EventListener<T>> listeners, double priority);
+    
+    public void register(Collection<EventListener<T>> listeners, ListenerPriority priority);
     
     public void register(double priority, EventListener<T> listener);
     
@@ -333,9 +343,35 @@ public interface Event<T extends EventArgs>
     
     public void register(ListenerPriority priority, Collection<EventListener<T>> listeners);
     
-    public void register(Collection<EventListener<T>> listeners, double priority);
+    public void registerWeakly(EventListener<T> listener);
     
-    public void register(Collection<EventListener<T>> listeners, ListenerPriority priority);
+    public void registerWeakly(EventListener<T>... listeners);
+    
+    public void registerWeakly(Collection<EventListener<T>> listeners);
+    
+    public void registerWeakly(EventListener<T> listener, double priority);
+    
+    public void registerWeakly(EventListener<T> listener, ListenerPriority priority);
+    
+    public void registerWeakly(EventListener<T>[] listeners, double priority);
+    
+    public void registerWeakly(EventListener<T>[] listeners, ListenerPriority priority);
+    
+    public void registerWeakly(Collection<EventListener<T>> listeners, double priority);
+    
+    public void registerWeakly(Collection<EventListener<T>> listeners, ListenerPriority priority);
+    
+    public void registerWeakly(double priority, EventListener<T> listener);
+    
+    public void registerWeakly(ListenerPriority priority, EventListener<T> listener);
+    
+    public void registerWeakly(double priority, EventListener<T>... listener);
+    
+    public void registerWeakly(ListenerPriority priority, EventListener<T>... listener);
+    
+    public void registerWeakly(double priority, Collection<EventListener<T>> listeners);
+    
+    public void registerWeakly(ListenerPriority priority, Collection<EventListener<T>> listeners);
     
     /**
      * Registers an event, alongside a DependentEventArgsGetter to generate the required EventArgs object, as a

@@ -201,33 +201,38 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     }
 
     @Override
-    public void raiseAlongside(Object sender, T args, Pair<? extends Event<?>, EventArgs> otherEvent)
+    public void raiseAlongside(Object sender, T args,
+                               Pair<? extends Event<?>, ? extends EventArgs> otherEvent)
     { raiseAlongside(sender, args, true, otherEvent); }
 
     @Override
-    public void raiseAlongside(Object sender, T args, Pair<? extends Event<?>, EventArgs>... otherEvents)
+    public void raiseAlongside(Object sender, T args,
+                               Pair<? extends Event<?>, ? extends EventArgs>... otherEvents)
     { raiseAlongside(sender, args, true, otherEvents); }
 
     @Override
-    public void raiseAlongside(Object sender, T args, Collection<? extends Pair<? extends Event<?>, EventArgs>> otherEvents)
+    public void raiseAlongside(Object sender, T args,
+                               Collection<? extends Pair<? extends Event<?>, ? extends EventArgs>> otherEvents)
     { raiseAlongside(sender, args, true, otherEvents); }
     
     @Override
-    public void raiseAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
-    { throw new NotImplementedException("Not implemented yet."); }
+    public void raiseAlongside(Object sender, T args,
+                               Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
+    { raiseAlongside(sender, args, true, otherEvents); }
 
     @Override
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<?>, EventArgs> otherEvent)
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation,
+                               Pair<? extends Event<?>, ? extends EventArgs> otherEvent)
     { raiseAlongside(sender, args, shareCancellation, Arrays.asList(otherEvent)); }
 
     @Override
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Pair<? extends Event<?>,
-                               EventArgs>... otherEvents)
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation,
+                               Pair<? extends Event<?>, ? extends EventArgs>... otherEvents)
     { raiseAlongside(sender, args, shareCancellation, Arrays.asList(otherEvents)); }
 
     @Override
     public void raiseAlongside(Object sender, T args, boolean shareCancellation,
-                               Collection<? extends Pair<? extends Event<?>, EventArgs>> otherEvents)
+                               Collection<? extends Pair<? extends Event<?>, ? extends EventArgs>> otherEvents)
     {
         // Sanity checks.
         // Mark all args as currently using pre event.
@@ -242,7 +247,7 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         
         args.getTechnicalAccessor().markAsUsingPreEvent();
         
-        for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : otherEvents)
             i.getSecond().getTechnicalAccessor().markAsUsingPreEvent();
         
         Collection<Queue<Triplet<EventListener<?>, Double, EventArgs>>> queues
@@ -251,7 +256,7 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         args.getTechnicalAccessor().setListenerQueue(getThisAndDependentArgsAsQueue(sender, args));
         queues.add(args.getTechnicalAccessor().getListenerQueue());
         
-        for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : otherEvents)
         {
             i.getSecond().getTechnicalAccessor()
                 .setListenerQueue(getEventAndDependantsArgsAsQueue(i.getFirst(), sender, i.getSecond()));
@@ -272,24 +277,26 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         
         args.getTechnicalAccessor().markAsUsedPreEvent();
         
-        for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : otherEvents)
             i.getSecond().getTechnicalAccessor().markAsUsedPreEvent();
     }
     
-    public void raiseAlongside(Object sender, T args, boolean shareCancellation, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
-    { throw new NotImplementedException("Not implemented yet."); }
+    @Override
+    public void raiseAlongside(Object sender, T args, boolean shareCancellation,
+                               Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
+    { raiseAlongside(sender, args, shareCancellation, CollectionMethods.getMapAsCollectionOfPairs(otherEvents)); }
 
     @Override
-    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<?>, EventArgs> otherEvent)
+    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<?>, ? extends EventArgs> otherEvent)
     { raisePostEventAlongside(sender, args, Arrays.asList(otherEvent)); }
 
     @Override
-    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<?>, EventArgs>... otherEvents)
+    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<?>, ? extends EventArgs>... otherEvents)
     { raisePostEventAlongside(sender, args, Arrays.asList(otherEvents)); }
 
     @Override
     public void raisePostEventAlongside(Object sender, T args,
-                                        Collection<? extends Pair<? extends Event<?>, EventArgs>> otherEvents)
+                                        Collection<? extends Pair<? extends Event<?>, ? extends EventArgs>> otherEvents)
     {
         // Sanity checks
         // Mark all args as being used post-event.
@@ -303,13 +310,13 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         if(args == null)
             throw new NullArgumentException("args.");
         
-        for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : otherEvents)
             if(i == null)
                 throw new NullArgumentException("Member of otherEvents.");
         
         args.getTechnicalAccessor().markAsUsingPostEvent();
         
-        for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : otherEvents)
             i.getSecond().getTechnicalAccessor().markAsUsingPostEvent();
         
         Collection<Queue<Triplet<EventListener<?>, Double, EventArgs>>> queues
@@ -317,7 +324,7 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         
         queues.add(args.getTechnicalAccessor().getListenerQueue());
         
-        for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : otherEvents)
             queues.add(i.getSecond().getTechnicalAccessor().getListenerQueue());
         
         Queue<Triplet<EventListener<?>, Double, EventArgs>> combinedQueue
@@ -333,10 +340,11 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         
         args.getTechnicalAccessor().markAsUsedPostEvent();
         
-        for(Pair<? extends Event<?>, EventArgs> i : otherEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : otherEvents)
             i.getSecond().getTechnicalAccessor().markAsUsedPostEvent();
     }
     
+    @Override
     public void raisePostEventAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
     { throw new NotImplementedException("Not implemented yet."); }
 
