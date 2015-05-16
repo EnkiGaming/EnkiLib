@@ -9,18 +9,25 @@ import com.enkigaming.lib.encapsulatedfunctions.Transformer;
 import com.enkigaming.lib.exceptions.NullArgumentException;
 import com.enkigaming.lib.tuples.Pair;
 import com.enkigaming.lib.tuples.Triplet;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class StandardEvent<T extends EventArgs> implements Event<T>
 {
     protected final Map<EventListener<T>, Double> listeners = new HashMap<EventListener<T>, Double>();
+    
+    protected final Map<WeakReference<EventListener<T>>, Double> weakListeners
+        = new IdentityHashMap<WeakReference<EventListener<T>>, Double>();
     
     protected final Map<Event<?>, Converger<Object, T, ? extends EventArgs>> dependentEvents
         = new HashMap<Event<?>, Converger<Object, T, ? extends EventArgs>>();
@@ -77,19 +84,73 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         synchronized(dependentEvents)
         { return new HashMap(dependentEvents); }
     }
-
+    
+    protected Map<EventListener<T>, Double> getWeakListenersWithPriorities()
+    {
+        Map<EventListener<T>, Double> returnListeners = new HashMap<EventListener<T>, Double>();
+        
+        synchronized(weakListeners)
+        {
+            for(Entry<WeakReference<EventListener<T>>, Double> entry
+                    : new HashSet<Entry<WeakReference<EventListener<T>>, Double>>(weakListeners.entrySet()))
+            {
+                EventListener<T> entryListener = entry.getKey().get();
+                
+                if(entryListener != null)
+                    returnListeners.put(entryListener, entry.getValue());
+                else
+                    weakListeners.remove(entry.getKey());
+            }
+        }
+        
+        return returnListeners;
+    }
+    
+    protected Collection<EventListener<T>> getWeakListeners()
+    {
+        HashSet<EventListener<T>> returnListeners = new HashSet<EventListener<T>>();
+        
+        synchronized(weakListeners)
+        {
+            for(Entry<WeakReference<EventListener<T>>, Double> entry
+                    : new HashSet<Entry<WeakReference<EventListener<T>>, Double>>(weakListeners.entrySet()))
+            {
+                EventListener<T> entryListener = entry.getKey().get();
+                
+                if(entryListener != null)
+                    returnListeners.add(entryListener);
+                else
+                    weakListeners.remove(entry.getKey());
+            }
+        }
+        
+        return returnListeners;
+    }
+        
     @Override
     public Collection<EventListener<T>> getListeners()
     {
+        Collection<EventListener<T>> returnListeners = new HashSet<EventListener<T>>();
+        
         synchronized(listeners)
-        { return new HashSet<EventListener<T>>(listeners.keySet()); }
+        { returnListeners.addAll(listeners.keySet()); }
+        
+        returnListeners.addAll(getWeakListeners());
+        
+        return returnListeners;
     }
 
     @Override
     public Map<EventListener<T>, Double> getListenersWithPriorities()
     {
+        Map<EventListener<T>, Double> returnListeners = new HashMap<EventListener<T>, Double>();
+        
         synchronized(listeners)
-        { return new HashMap<EventListener<T>, Double>(listeners); }
+        { returnListeners.putAll(listeners); }
+        
+        returnListeners.putAll(getWeakListenersWithPriorities());
+        
+        return returnListeners;
     }
 
     @Override
@@ -347,66 +408,108 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     @Override
     public void raisePostEventAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
     { throw new NotImplementedException("Not implemented yet."); }
-
+    
     @Override
     public void register(EventListener<T> listener)
-    { register(ListenerPriority.Normal.getNumericalValue(), listener); }
-
+    { register(listener, ListenerPriority.Normal.getNumericalValue()); }
+    
     @Override
     public void register(EventListener<T>... listeners)
-    { register(ListenerPriority.Normal.getNumericalValue(), Arrays.asList(listeners)); }
-
+    { register(Arrays.asList(listeners), ListenerPriority.Normal.getNumericalValue()); }
+    
     @Override
-    public void register(EventListener<T> listener, double priority)
-    { register(priority, listener); }
-
+    public void register(Collection<EventListener<T>> listeners)
+    { register(listeners, ListenerPriority.Normal.getNumericalValue()); }
+    
+    @Override
+    public void register(EventListener<T> listener, double priority) // Main
+    {
+        for(Method method : listener.getClass().getMethods())
+            if(method.isAnnotationPresent(WeakListener.class))
+                synchronized(weakListeners)
+                {
+                    weakListeners.put(new WeakReference<EventListener<T>>(listener), priority);
+                    return;
+                }
+        
+        synchronized(listeners)
+        { listeners.put(listener, priority); }
+    }
+    
     @Override
     public void register(EventListener<T> listener, ListenerPriority priority)
-    { register(priority.getNumericalValue(), listener); }
-
+    { register(listener, priority.getNumericalValue()); }
+    
     @Override
-    public void register(double priority, EventListener<T> listener)
+    public void register(EventListener<T>[] listeners, double priority)
+    { register(Arrays.asList(listeners), priority); }
+    
+    @Override
+    public void register(EventListener<T>[] listeners, ListenerPriority priority)
+    { register(Arrays.asList(listeners), priority.getNumericalValue()); }
+    
+    @Override
+    public void register(Collection<EventListener<T>> listeners, double priority) // Main
     {
-        synchronized(listeners)
+        Collection<EventListener<T>> strongs = new HashSet<EventListener<T>>();
+        Collection<EventListener<T>> weaks   = new HashSet<EventListener<T>>();
+        
+        for(EventListener<T> i : listeners)
         {
-            listeners.put(listener, priority);
-            //System.out.println("Listeners now contains: " + listeners.toString());
+            boolean wasWeak = false;
+            
+            for(Method method : i.getClass().getMethods())
+                if(method.isAnnotationPresent(WeakListener.class))
+                {
+                    weaks.add(i);
+                    wasWeak = true;
+                    break;
+                }
+            
+            if(!wasWeak)
+                strongs.add(i);
         }
-    }
-
-    @Override
-    public void register(ListenerPriority priority, EventListener<T> listener)
-    { register(priority.getNumericalValue(), listener); }
-
-    @Override
-    public void register(double priority, EventListener<T>... listeners)
-    { register(priority, Arrays.asList(listeners)); }
-    
-    @Override
-    public void register(ListenerPriority priority, EventListener<T>... listeners)
-    { register(priority.getNumericalValue(), Arrays.asList(listeners)); }
-    
-    @Override
-    public void register(double priority, Collection<EventListener<T>> listeners)
-    {
-        synchronized(listeners)
+        
+        synchronized(this.listeners)
         {
-            for(EventListener<T> i : listeners)
+            for(EventListener<T> i : strongs)
                 this.listeners.put(i, priority);
         }
+        
+        synchronized(weakListeners)
+        {
+            for(EventListener<T> i : weaks)
+                this.weakListeners.put(new WeakReference<EventListener<T>>(i), priority);
+        }
     }
-    
-    @Override
-    public void register(ListenerPriority priority, Collection<EventListener<T>> listeners)
-    { register(priority.getNumericalValue(), listeners); }
-    
-    @Override
-    public void register(Collection<EventListener<T>> listeners, double priority)
-    { register(priority, listeners); }
     
     @Override
     public void register(Collection<EventListener<T>> listeners, ListenerPriority priority)
-    { register(priority.getNumericalValue(), listeners); }
+    { register(listeners, priority.getNumericalValue()); }
+    
+    @Override
+    public void register(double priority, EventListener<T> listener)
+    { register(listener, priority); }
+    
+    @Override
+    public void register(ListenerPriority priority, EventListener<T> listener)
+    { register(listener, priority.getNumericalValue()); }
+    
+    @Override
+    public void register(double priority, EventListener<T>... listeners)
+    { register(Arrays.asList(listeners), priority); }
+    
+    @Override
+    public void register(ListenerPriority priority, EventListener<T>... listeners)
+    { register(Arrays.asList(listeners), ListenerPriority.Normal.getNumericalValue()); }
+    
+    @Override
+    public void register(double priority, Collection<EventListener<T>> listeners)
+    { register(listeners, priority); }
+    
+    @Override
+    public void register(ListenerPriority priority, Collection<EventListener<T>> listeners)
+    { register(listeners, priority.getNumericalValue()); }
 
     @Override
     public <TArgs extends EventArgs> void register(Event<TArgs> event, Converger<Object, T, TArgs> eventArgsGetter)
@@ -439,7 +542,31 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     public EventListener<T> deregister(EventListener<T> listener)
     {
         synchronized(listeners)
-        { return listeners.remove(listener) == null ? null : listener; }
+        {
+            if(listeners.remove(listener) != null)
+                return listener;
+        }
+        
+        WeakReference<EventListener<T>> toRemove = null;
+        EventListener<T> toRemoveUnwrapped = null;
+        
+        synchronized(weakListeners)
+        {
+            for(WeakReference<EventListener<T>> i : weakListeners.keySet())
+            {
+                EventListener<T> iListener = i.get();
+                
+                if(listener.equals(iListener))
+                {
+                    toRemove = i;
+                    toRemoveUnwrapped = iListener;
+                    break;
+                }
+            }
+            
+            weakListeners.remove(toRemove);
+            return toRemoveUnwrapped;
+        }
     }
 
     @Override
@@ -452,6 +579,23 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
             for(EventListener<T> i : listeners)
                 if(this.listeners.remove(i) != null)
                     deregistered.add(i);
+        }
+        
+        synchronized(weakListeners)
+        {
+            for(WeakReference<EventListener<T>> i
+                    : new ArrayList<WeakReference<EventListener<T>>>(weakListeners.keySet()))
+            {
+                EventListener<T> iListener = i.get();
+                
+                for(EventListener<T> j : listeners)
+                    if(iListener != null & iListener.equals(j))
+                    {
+                        deregistered.add(iListener);
+                        weakListeners.remove(i);
+                        break;
+                    }
+            }
         }
         
         return deregistered;

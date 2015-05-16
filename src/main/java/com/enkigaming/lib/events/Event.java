@@ -335,43 +335,13 @@ public interface Event<T extends EventArgs>
     
     public void register(ListenerPriority priority, EventListener<T> listener);
     
-    public void register(double priority, EventListener<T>... listener);
+    public void register(double priority, EventListener<T>... listeners);
     
-    public void register(ListenerPriority priority, EventListener<T>... listener);
+    public void register(ListenerPriority priority, EventListener<T>... listeners);
     
     public void register(double priority, Collection<EventListener<T>> listeners);
     
     public void register(ListenerPriority priority, Collection<EventListener<T>> listeners);
-    
-    public void registerWeakly(EventListener<T> listener);
-    
-    public void registerWeakly(EventListener<T>... listeners);
-    
-    public void registerWeakly(Collection<EventListener<T>> listeners);
-    
-    public void registerWeakly(EventListener<T> listener, double priority);
-    
-    public void registerWeakly(EventListener<T> listener, ListenerPriority priority);
-    
-    public void registerWeakly(EventListener<T>[] listeners, double priority);
-    
-    public void registerWeakly(EventListener<T>[] listeners, ListenerPriority priority);
-    
-    public void registerWeakly(Collection<EventListener<T>> listeners, double priority);
-    
-    public void registerWeakly(Collection<EventListener<T>> listeners, ListenerPriority priority);
-    
-    public void registerWeakly(double priority, EventListener<T> listener);
-    
-    public void registerWeakly(ListenerPriority priority, EventListener<T> listener);
-    
-    public void registerWeakly(double priority, EventListener<T>... listener);
-    
-    public void registerWeakly(ListenerPriority priority, EventListener<T>... listener);
-    
-    public void registerWeakly(double priority, Collection<EventListener<T>> listeners);
-    
-    public void registerWeakly(ListenerPriority priority, Collection<EventListener<T>> listeners);
     
     /**
      * Registers an event, alongside a DependentEventArgsGetter to generate the required EventArgs object, as a
@@ -398,8 +368,7 @@ public interface Event<T extends EventArgs>
      * Removes an event listener from this event, stopping its onEvent method from being called when this event is
      * raised in any manner, unless it is re-registered.
      * @param listener The event listener object to deregister.
-     * @return True if an event listener was successfully deregistered from the event, false if it wasn't. (Such as
-     * because the event listener wasn't registered to the event in order to be deregistered)
+     * @return The listener deregistered as a result of this method call, or null if no listener was removed.
      */
     public EventListener<T> deregister(EventListener<T> listener);
     

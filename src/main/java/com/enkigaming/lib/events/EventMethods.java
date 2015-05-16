@@ -73,7 +73,7 @@ public class EventMethods
         alongsideEvents.remove(toCallOn);
         ((Event<EventArgs>)toCallOn.getFirst()).raisePostEventAlongside(sender, toCallOn.getSecond(), events);
     }
-//</editor-fold>
+    //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="Event args relating">
     public static void relateArgs(EventArgs... args)
