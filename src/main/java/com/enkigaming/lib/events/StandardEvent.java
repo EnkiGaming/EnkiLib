@@ -32,33 +32,82 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     protected final Map<Event<?>, Converger<Object, T, ? extends EventArgs>> dependentEvents
         = new HashMap<Event<?>, Converger<Object, T, ? extends EventArgs>>();
     
+    protected final Map<WeakReference<Event<?>>, Converger<Object, T, ? extends EventArgs>> weakDependentEvents
+        = new IdentityHashMap<WeakReference<Event<?>>, Converger<Object, T, ? extends EventArgs>>();
+    
+    protected Map<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>> getWeakDependantsWithGetters()
+    {
+        Map<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>> result
+            = new HashMap<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>>();
+        
+        synchronized(weakDependentEvents)
+        {
+            for(Entry<WeakReference<Event<?>>, Converger<Object, T, ? extends EventArgs>> entry
+                : new HashSet<Entry<WeakReference<Event<?>>, Converger<Object, T, ? extends EventArgs>>>(weakDependentEvents.entrySet()))
+            {
+                Event<?> event = entry.getKey().get();
+                
+                if(event == null)
+                {
+                    weakDependentEvents.remove(entry.getKey());
+                    continue;
+                }
+                
+                result.put(event, entry.getValue());
+            }
+        }
+        
+        return result;
+    }
+    
+    protected Collection<Event<? extends EventArgs>> getWeakDependants()
+    {
+        Collection<Event<? extends EventArgs>> result = new HashSet<Event<? extends EventArgs>>();
+        
+        synchronized(weakDependentEvents)
+        {
+            for(WeakReference<Event<?>> key : new HashSet<WeakReference<Event<?>>>(weakDependentEvents.keySet()))
+            {
+                Event<?> event = key.get();
+                
+                if(event == null)
+                {
+                    weakDependentEvents.remove(key);
+                    continue;
+                }
+                
+                result.add(event);
+            }
+        }
+        
+        return result;
+    }
+    
     @Override
     public Collection<Event<? extends EventArgs>> getDependentEvents(boolean includeThis,
                                                                      boolean includeDependantsCascadingly)
     {
-        if(!includeThis && !includeDependantsCascadingly)
-            synchronized(dependentEvents)
-            { return dependentEvents.keySet(); }
-        
-        Collection<Event<?>> events;
+        Collection<Event<? extends EventArgs>> result = new HashSet<Event<? extends EventArgs>>();
         
         synchronized(dependentEvents)
-        { events = new HashSet<Event<?>>(dependentEvents.keySet()); }
+        { result.addAll(dependentEvents.keySet()); }
+        
+        result.addAll(getWeakDependants());
         
         if(includeDependantsCascadingly)
         {
             Collection<Event<? extends EventArgs>> cascadingDependants = new HashSet<Event<? extends EventArgs>>();
             
-            for(Event<? extends EventArgs> i : events)
+            for(Event<? extends EventArgs> i : result)
                 cascadingDependants.addAll(i.getDependentEvents(false, true));
             
-            events.addAll(cascadingDependants);
+            result.addAll(cascadingDependants);
         }
         
         if(includeThis)
-            events.add(this);
+            result.add(this);
         
-        return events;
+        return result;
     }
 
     @Override
@@ -81,8 +130,14 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     public Map<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>>
         getDirectlyDependentEventsAndArgsGetters()
     {
+        Map<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>> result = new HashMap<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>>();
+        
         synchronized(dependentEvents)
-        { return new HashMap(dependentEvents); }
+        { result.putAll(dependentEvents); }
+        
+        result.putAll(getWeakDependantsWithGetters());
+        
+        return result;
     }
     
     protected Map<EventListener<T>, Double> getWeakListenersWithPriorities()
@@ -157,14 +212,11 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     public Collection<EventListener<? extends EventArgs>> getDependentListeners(boolean includeListenersOfThis,
                                                                                 boolean includeDependantsCascadingly)
     {
-        // Collection that allows multiple values, as the same listener may be registered to multiple events.
+        // Collection that allows multiple values, as the same listener may be registered to multiple result.
         Collection<EventListener<?>> returnListeners = new ArrayList<EventListener<?>>();
-        
-        synchronized(dependentEvents)
-        {
-            for(Event<?> i : getDependentEvents(includeListenersOfThis, includeDependantsCascadingly))
-                returnListeners.addAll(i.getListeners());
-        }
+
+        for(Event<?> i : getDependentEvents(includeListenersOfThis, includeDependantsCascadingly))
+            returnListeners.addAll(i.getListeners());
         
         return returnListeners;
     }
@@ -348,11 +400,13 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     { raiseAlongside(sender, args, shareCancellation, CollectionMethods.getMapAsCollectionOfPairs(otherEvents)); }
 
     @Override
-    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<?>, ? extends EventArgs> otherEvent)
+    public void raisePostEventAlongside(Object sender, T args,
+                                        Pair<? extends Event<?>, ? extends EventArgs> otherEvent)
     { raisePostEventAlongside(sender, args, Arrays.asList(otherEvent)); }
 
     @Override
-    public void raisePostEventAlongside(Object sender, T args, Pair<? extends Event<?>, ? extends EventArgs>... otherEvents)
+    public void raisePostEventAlongside(Object sender, T args,
+                                        Pair<? extends Event<?>, ? extends EventArgs>... otherEvents)
     { raisePostEventAlongside(sender, args, Arrays.asList(otherEvents)); }
 
     @Override
@@ -406,7 +460,8 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     }
     
     @Override
-    public void raisePostEventAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
+    public void raisePostEventAlongside(Object sender, T args,
+                                        Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents)
     { throw new NotImplementedException("Not implemented yet."); }
     
     @Override
@@ -537,6 +592,48 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
                 dependentEvents.put(i, eventArgsGetter);
         }
     }
+    
+    @Override
+    public <TArgs extends EventArgs> void register(Event<TArgs> event,
+                                                   Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered)
+    { throw new NotImplementedException("Not implemented yet."); }
+    
+    @Override
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Event<TArgs> event,
+                                                   boolean stronglyRegistered)
+    { throw new NotImplementedException("Not implemented yet."); }
+    
+    @Override
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered,
+                                                   Event<TArgs> event)
+    { throw new NotImplementedException("Not implemented yet."); }
+    
+    @Override
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered,
+                                                   Event<? extends TArgs>... events)
+    { throw new NotImplementedException("Not implemented yet."); }
+    
+    @Override
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered,
+                                                   Collection<? extends Event<? extends TArgs>> events)
+    { throw new NotImplementedException("Not implemented yet."); }
+    
+    @Override
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Event<? extends TArgs>[] events,
+                                                   boolean stronglyRegistered)
+    { throw new NotImplementedException("Not implemented yet."); }
+    
+    @Override
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Collection<? extends Event<? extends TArgs>> events,
+                                                   boolean stronglyRegistered)
+    { throw new NotImplementedException("Not implemented yet."); }
 
     @Override
     public EventListener<T> deregister(EventListener<T> listener)
@@ -605,7 +702,32 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     public Event<? extends EventArgs> deregister(Event<? extends EventArgs> event)
     {
         synchronized(dependentEvents)
-        { return dependentEvents.remove(event) == null ? null : event; }
+        {
+            if(dependentEvents.remove(event) != null)
+                return event;
+        }
+        
+        synchronized(weakDependentEvents)
+        {
+            for(WeakReference<Event<?>> i : new ArrayList<WeakReference<Event<?>>>(weakDependentEvents.keySet()))
+            {
+                Event<?> iEvent = i.get();
+                
+                if(iEvent == null)
+                {
+                    weakDependentEvents.remove(i);
+                    continue;
+                }
+                
+                if(iEvent == event)
+                {
+                    weakDependentEvents.remove(i);
+                    return iEvent;
+                }
+            }
+        }
+        
+        return null;
     }
 
     @Override
@@ -618,6 +740,29 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
             for(Event<? extends EventArgs> i : events)
                 if(this.dependentEvents.remove(i) != null)
                     deregistered.add(i);
+        }
+        
+        synchronized(weakDependentEvents)
+        {
+            WeakDependantsLoop:
+            for(WeakReference<Event<?>> i : new ArrayList<WeakReference<Event<?>>>(weakDependentEvents.keySet()))
+            {
+                Event<?> iEvent = i.get();
+                
+                if(iEvent == null)
+                {
+                    weakDependentEvents.remove(i);
+                    continue;
+                }
+                
+                for(Event<?> j : events)
+                    if(iEvent == j)
+                    {
+                        weakDependentEvents.remove(i);
+                        deregistered.add(iEvent);
+                        continue WeakDependantsLoop;
+                    }
+            }
         }
         
         return deregistered;

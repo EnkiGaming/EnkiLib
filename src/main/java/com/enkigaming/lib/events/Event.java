@@ -364,6 +364,34 @@ public interface Event<T extends EventArgs>
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Collection<? extends Event<? extends TArgs>> events);
     
+    public <TArgs extends EventArgs> void register(Event<TArgs> event,
+                                                   Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Event<TArgs> event,
+                                                   boolean stronglyRegistered);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered,
+                                                   Event<TArgs> event);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered,
+                                                   Event<? extends TArgs>... events);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   boolean stronglyRegistered,
+                                                   Collection<? extends Event<? extends TArgs>> events);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Event<? extends TArgs>[] events,
+                                                   boolean stronglyRegistered);
+    
+    public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
+                                                   Collection<? extends Event<? extends TArgs>> events,
+                                                   boolean stronglyRegistered);
+    
     /**
      * Removes an event listener from this event, stopping its onEvent method from being called when this event is
      * raised in any manner, unless it is re-registered.
