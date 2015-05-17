@@ -597,43 +597,103 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
     public <TArgs extends EventArgs> void register(Event<TArgs> event,
                                                    Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered)
-    { throw new NotImplementedException("Not implemented yet."); }
+    { register(eventArgsGetter, event, stronglyRegistered); }
     
     @Override
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Event<TArgs> event,
                                                    boolean stronglyRegistered)
-    { throw new NotImplementedException("Not implemented yet."); }
+    {
+        if(stronglyRegistered)
+        {
+            register(eventArgsGetter, event);
+            return;
+        }
+        
+        synchronized(weakDependentEvents)
+        {
+            for(WeakReference<Event<?>> i : new ArrayList<WeakReference<Event<?>>>(weakDependentEvents.keySet()))
+            {
+                Event<?> iEvent = i.get();
+                
+                if(iEvent == null)
+                {
+                    weakDependentEvents.remove(i);
+                    continue;
+                }
+                
+                if(iEvent == event)
+                {
+                    weakDependentEvents.remove(i);
+                    break;
+                }
+            }
+            
+            weakDependentEvents.put(new WeakReference<Event<?>>(event), eventArgsGetter);
+        }
+    }
     
     @Override
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered,
                                                    Event<TArgs> event)
-    { throw new NotImplementedException("Not implemented yet."); }
+    { register(eventArgsGetter, event, stronglyRegistered); }
     
     @Override
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered,
                                                    Event<? extends TArgs>... events)
-    { throw new NotImplementedException("Not implemented yet."); }
+    { register(eventArgsGetter, Arrays.asList(events), stronglyRegistered); }
     
     @Override
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered,
                                                    Collection<? extends Event<? extends TArgs>> events)
-    { throw new NotImplementedException("Not implemented yet."); }
+    { register(eventArgsGetter, events, stronglyRegistered); }
     
     @Override
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Event<? extends TArgs>[] events,
                                                    boolean stronglyRegistered)
-    { throw new NotImplementedException("Not implemented yet."); }
+    { register(eventArgsGetter, Arrays.asList(events), stronglyRegistered); }
     
     @Override
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Collection<? extends Event<? extends TArgs>> events,
                                                    boolean stronglyRegistered)
-    { throw new NotImplementedException("Not implemented yet."); }
+    {
+        if(stronglyRegistered)
+        {
+            register(eventArgsGetter, events);
+            return;
+        }
+        
+        synchronized(weakDependentEvents)
+        {
+            for(WeakReference<Event<?>> i : new ArrayList<WeakReference<Event<?>>>(weakDependentEvents.keySet()))
+            {
+                Event<?> iEvent = i.get();
+                
+                if(iEvent == null)
+                {
+                    weakDependentEvents.remove(i);
+                    continue;
+                }
+                
+                for(Event<? extends TArgs> event : events)
+                {
+                    if(iEvent == event)
+                    {
+                        weakDependentEvents.remove(i);
+                        break;
+                    }
+                }
+            }
+            
+            for(Event<? extends TArgs> event : events)
+                weakDependentEvents.put(new WeakReference<Event<?>>(event), eventArgsGetter);
+        }
+    }
 
     @Override
     public EventListener<T> deregister(EventListener<T> listener)
