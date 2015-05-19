@@ -13,8 +13,7 @@ import com.enkigaming.mcforge.lib.compatability.ForgeBlock;
 import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
 import com.enkigaming.mcforge.lib.compatability.ForgeServer;
 import com.enkigaming.mcforge.lib.compatability.ForgeWorld;
-import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPostListener;
-import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPreListener;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPrePostListener;
 import com.enkigaming.mcforge.lib.eventlisteners.PlayerLogInPrePostListener;
 import com.enkigaming.mcforge.lib.eventlisteners.SecondPassedEventListener;
 import com.enkigaming.mcforge.lib.registry.UsernameCache;
@@ -33,7 +32,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "r1.7.0";
+    public static final String VERSION = "r1.7.1";
 
     /*
     Versioning:
@@ -143,9 +142,10 @@ public class EnkiLib
     
     private void registerEvents()
     {
-        FMLCommonHandler.instance().bus().register(new PlayerLogInPrePostListener());
-        MinecraftForge.EVENT_BUS.register(PlayerDeathPreListener.instance);
-        MinecraftForge.EVENT_BUS.register(PlayerDeathPostListener.instance);
+        // TO DO: Remove static .instance fields and allow listener objects to be accessed from the mod class. (this)
+        
+        FMLCommonHandler.instance().bus().register(PlayerLogInPrePostListener.instance);
+        MinecraftForge.EVENT_BUS.register(PlayerDeathPrePostListener.instance);
         
         FMLCommonHandler.instance().bus().register(new PlayerLogInForCachingEventListener());
         MinecraftForge.EVENT_BUS.register(new WorldSaveEventListener());

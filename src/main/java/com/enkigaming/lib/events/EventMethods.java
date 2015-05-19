@@ -10,18 +10,22 @@ import java.util.Map;
 public class EventMethods
 {
     //<editor-fold defaultstate="collapsed" desc="Multiple raise">
-    public static void raiseMultiple(Object sender, Pair<Event<?>, EventArgs>... events)
+    public static void raiseMultiple(Object sender, Pair<? extends Event<?>, ? extends EventArgs>... events)
     { raiseMultiple(sender, Arrays.asList(events)); }
     
-    public static void raiseMultiple(Object sender, boolean shareCancellation, Pair<Event<?>, EventArgs>... events)
+    public static void raiseMultiple(Object sender, boolean shareCancellation,
+                                     Pair<? extends Event<?>, ? extends EventArgs>... events)
     { raiseMultiple(sender, shareCancellation, Arrays.asList(events)); }
     
-    public static void raiseMultiple(Object sender, Collection<Pair<Event<?>, EventArgs>> events)
+    public static void raiseMultiple(Object sender,
+                                     Collection<? extends Pair<? extends Event<?>, ? extends EventArgs>> events)
     {
-        Collection<Pair<Event<?>, EventArgs>> alongsideEvents = new ArrayList<Pair<Event<?>, EventArgs>>(events);
-        Pair<Event<?>, EventArgs> toCallOn = null;
+        Collection<Pair<? extends Event<?>, ? extends EventArgs>> alongsideEvents
+                = new ArrayList<Pair<? extends Event<?>, ? extends EventArgs>>(events);
         
-        for(Pair<Event<?>, EventArgs> i : alongsideEvents)
+        Pair<? extends Event<?>, ? extends EventArgs> toCallOn = null;
+        
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : alongsideEvents)
         {
             toCallOn = i;
             break;
@@ -34,12 +38,14 @@ public class EventMethods
         ((Event<EventArgs>)toCallOn.getFirst()).raiseAlongside(sender, toCallOn.getSecond(), events);
     }
     
-    public static void raiseMultiple(Object sender, boolean shareCancellation, Collection<Pair<Event<?>, EventArgs>> events)
+    public static void raiseMultiple(Object sender, boolean shareCancellation,
+                                     Collection<? extends Pair<? extends Event<?>, ? extends EventArgs>> events)
     {
-        Collection<Pair<Event<?>, EventArgs>> alongsideEvents = new ArrayList<Pair<Event<?>, EventArgs>>(events);
-        Pair<Event<?>, EventArgs> toCallOn = null;
+        Collection<Pair<? extends Event<?>, ? extends EventArgs>> alongsideEvents
+                = new ArrayList<Pair<? extends Event<?>, ? extends EventArgs>>(events);
+        Pair<? extends Event<?>, ? extends EventArgs> toCallOn = null;
         
-        for(Pair<Event<?>, EventArgs> i : alongsideEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : alongsideEvents)
         {
             toCallOn = i;
             break;
@@ -52,23 +58,25 @@ public class EventMethods
         ((Event<EventArgs>)toCallOn.getFirst()).raiseAlongside(sender, toCallOn.getSecond(), shareCancellation, events);
     }
     
-    public static void raiseMultiple(Object sender, Map<Event<?>, EventArgs> events)
+    public static void raiseMultiple(Object sender, Map<? extends Event<?>, ? extends EventArgs> events)
     { raiseMultiple(sender, CollectionMethods.getMapAsCollectionOfPairs(events)); }
     
-    public static void raiseMultiple(Object sender, boolean shareCancellation, Map<Event<?>, EventArgs> events)
+    public static void raiseMultiple(Object sender, boolean shareCancellation,
+                                     Map<? extends Event<?>, ? extends EventArgs> events)
     { raiseMultiple(sender, shareCancellation, CollectionMethods.getMapAsCollectionOfPairs(events)); }
     
-    public static void raiseMultiplePostEvent(Object sender, Pair<Event<?>, EventArgs>... events)
+    public static void raiseMultiplePostEvent(Object sender, Pair<? extends Event<?>, ? extends EventArgs>... events)
     { raiseMultiple(sender, Arrays.asList(events)); }
     
-    public static void raiseMultiplePostEvent(Object sender, Collection<Pair<Event<?>, EventArgs>> events)
+    public static void raiseMultiplePostEvent(Object sender,
+                                              Collection<? extends Pair<? extends Event<?>, ? extends EventArgs>> events)
     {
-        Collection<Pair<Event<?>, EventArgs>> alongsideEvents
-        = new ArrayList<Pair<Event<?>, EventArgs>>(events);
+        Collection<Pair<? extends Event<?>, ? extends EventArgs>> alongsideEvents
+                = new ArrayList<Pair<? extends Event<?>, ? extends EventArgs>>(events);
         
-        Pair<Event<?>, EventArgs> toCallOn = null;
+        Pair<? extends Event<?>, ? extends EventArgs> toCallOn = null;
         
-        for(Pair<Event<?>, EventArgs> i : alongsideEvents)
+        for(Pair<? extends Event<?>, ? extends EventArgs> i : alongsideEvents)
         {
             toCallOn = i;
             break;
@@ -81,7 +89,7 @@ public class EventMethods
         ((Event<EventArgs>)toCallOn.getFirst()).raisePostEventAlongside(sender, toCallOn.getSecond(), events);
     }
     
-    public static void raiseMultiplePostEvent(Object sender, Map<Event<?>, EventArgs> events)
+    public static void raiseMultiplePostEvent(Object sender, Map<? extends Event<?>, ? extends EventArgs> events)
     { raiseMultiplePostEvent(sender, CollectionMethods.getMapAsCollectionOfPairs(events)); }
     //</editor-fold>
     

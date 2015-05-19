@@ -3,7 +3,7 @@ package com.enkigaming.mcforge.lib.compatability;
 import com.enkigaming.lib.events.exceptions.NoSuchUsernameException;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
 import com.enkigaming.mcforge.lib.EnkiLib;
-import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPreListener;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPrePostListener;
 import com.enkigaming.mcforge.lib.eventlisteners.PlayerLogInPrePostListener;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +57,7 @@ public class ForgePlayer extends EnkiPlayer
     public void initialiseEvents()
     {
         PlayerLogInPrePostListener.instance.registerForgePlayer(this);
-        PlayerDeathPreListener.instance.addEventToRaise(this);
+        PlayerDeathPrePostListener.instance.registerForgePlayer(this);
     }
     
     UUID playerId;
