@@ -15,6 +15,7 @@ import com.enkigaming.mcforge.lib.compatability.ForgeServer;
 import com.enkigaming.mcforge.lib.compatability.ForgeWorld;
 import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPostListener;
 import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPreListener;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerLogInPrePostListener;
 import com.enkigaming.mcforge.lib.eventlisteners.SecondPassedEventListener;
 import com.enkigaming.mcforge.lib.registry.UsernameCache;
 import com.google.common.collect.MapMaker;
@@ -25,7 +26,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import java.io.File;
 import java.util.Map;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import net.minecraftforge.common.MinecraftForge;
 
 @Mod(modid = EnkiLib.MODID, name = EnkiLib.NAME, version = EnkiLib.VERSION, acceptableRemoteVersions = "*")
@@ -33,7 +33,7 @@ public class EnkiLib
 {
     public static final String NAME = "EnkiLib";
     public static final String MODID = "EnkiLib";
-    public static final String VERSION = "r1.1.3";
+    public static final String VERSION = "r1.7.0";
 
     /*
     Versioning:
@@ -143,6 +143,7 @@ public class EnkiLib
     
     private void registerEvents()
     {
+        FMLCommonHandler.instance().bus().register(new PlayerLogInPrePostListener());
         MinecraftForge.EVENT_BUS.register(PlayerDeathPreListener.instance);
         MinecraftForge.EVENT_BUS.register(PlayerDeathPostListener.instance);
         

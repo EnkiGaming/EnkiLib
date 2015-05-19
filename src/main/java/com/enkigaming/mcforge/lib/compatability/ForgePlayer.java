@@ -2,17 +2,15 @@ package com.enkigaming.mcforge.lib.compatability;
 
 import com.enkigaming.lib.events.exceptions.NoSuchUsernameException;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
-import com.enkigaming.mc.lib.compatability.EnkiWorld;
 import com.enkigaming.mcforge.lib.EnkiLib;
 import com.enkigaming.mcforge.lib.eventlisteners.PlayerDeathPreListener;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import com.enkigaming.mcforge.lib.eventlisteners.PlayerLogInPrePostListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class ForgePlayer extends EnkiPlayer
@@ -57,7 +55,10 @@ public class ForgePlayer extends EnkiPlayer
     }
     
     public void initialiseEvents()
-    { PlayerDeathPreListener.instance.addEventToRaise(this); }
+    {
+        PlayerLogInPrePostListener.instance.registerForgePlayer(this);
+        PlayerDeathPreListener.instance.addEventToRaise(this);
+    }
     
     UUID playerId;
     
