@@ -6,7 +6,10 @@ import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer.ConnectedArgs;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer.DiedArgs;
+import com.enkigaming.mc.lib.compatability.EnkiPlayer.DisconnectedArgs;
 import com.enkigaming.mc.lib.compatability.EnkiServer;
+import com.enkigaming.mc.lib.compatability.EnkiServer.PlayerJoinedArgs;
+import com.enkigaming.mc.lib.compatability.EnkiServer.PlayerLeftArgs;
 import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -49,8 +52,8 @@ public class ForgePlayerEventBridge
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerLogIn(PlayerEvent.PlayerLoggedInEvent event)
     {
-        Map<Event<ConnectedArgs>, EnkiPlayer.ConnectedArgs> toRaise = new HashMap<Event<ConnectedArgs>, EnkiPlayer.ConnectedArgs>();
-        EnkiServer.PlayerJoinedArgs serverEventArgs = new EnkiServer.PlayerJoinedArgs(event.player.getGameProfile().getId());
+        Map<Event<ConnectedArgs>, ConnectedArgs> toRaise = new HashMap<Event<ConnectedArgs>, ConnectedArgs>();
+        PlayerJoinedArgs serverEventArgs = new PlayerJoinedArgs(event.player.getGameProfile().getId());
         
         for(ForgePlayer i : getForgePlayerObjects(event.player.getGameProfile().getId()))
             toRaise.put(i.connected, new ConnectedArgs());
@@ -59,6 +62,21 @@ public class ForgePlayerEventBridge
         { CompatabilityAccess.getServer().playerJoined.raiseAlongside(this, serverEventArgs, toRaise); }
         finally
         { CompatabilityAccess.getServer().playerJoined.raisePostEventAlongside(this, serverEventArgs, toRaise); }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onPlayerLogOut(PlayerEvent.PlayerLoggedOutEvent event)
+    {
+        Map<Event<DisconnectedArgs>, DisconnectedArgs> toRaise = new HashMap<Event<DisconnectedArgs>, DisconnectedArgs>();
+        PlayerLeftArgs serverEventArgs = new PlayerLeftArgs(event.player.getGameProfile().getId());
+        
+        for(ForgePlayer i : getForgePlayerObjects(event.player.getGameProfile().getId()))
+            toRaise.put(i.disconnected, new DisconnectedArgs());
+        
+        try
+        { CompatabilityAccess.getServer().playerLeft.raiseAlongside(this, serverEventArgs, toRaise); }
+        finally
+        { CompatabilityAccess.getServer().playerLeft.raisePostEventAlongside(this, serverEventArgs, toRaise); }
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)
