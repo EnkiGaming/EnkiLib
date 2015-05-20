@@ -9,6 +9,15 @@ public class CoOrdinate3d implements XYZCoOrdSet
         this.z = z;
     }
     
+    public CoOrdinate3d(Number x, Number y, Number z)
+    { this(x.intValue(), y.intValue(), z.intValue()); }
+    
+    public CoOrdinate3d(XYZCoOrdSet source)
+    { this(source.getX(), source.getY(), source.getZ()); }
+    
+    public CoOrdinate3d(XYZPoint source)
+    { this((int)source.getX(), (int)source.getY(), (int)source.getZ()); }
+    
     final int x, y, z;
 
     @Override

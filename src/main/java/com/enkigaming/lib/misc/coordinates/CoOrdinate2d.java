@@ -8,6 +8,15 @@ public class CoOrdinate2d implements XYCoOrdPair
         this.y = y;
     }
     
+    public CoOrdinate2d(Number x, Number y)
+    { this(x.intValue(), y.intValue()); }
+    
+    public CoOrdinate2d(XYCoOrdPair source)
+    { this(source.getX(), source.getY()); }
+    
+    public CoOrdinate2d(XYPoint source)
+    { this((int)source.getX(), (int)source.getY()); }
+    
     final int x, y;
 
     @Override

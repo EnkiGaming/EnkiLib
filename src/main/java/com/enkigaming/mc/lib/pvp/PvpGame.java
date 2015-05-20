@@ -237,7 +237,7 @@ public abstract class PvpGame
         /* return gameTimer listeners here */
     }
     
-    Map<UUID, PlayerGameState> players;
+    final Map<UUID, PlayerGameState> players;
     Collection<PvpTeam> teams;
     BlockCoOrdinate lobbySpawn;
     GameStates possibleGameStates;
@@ -245,12 +245,20 @@ public abstract class PvpGame
     TickCountdownTimer lobbyTimer, gameTimer;
     int minNumberOfTeams;
     
+    final Object lobbySpawnBusy = new Object();
+    
     public final Event<PlayerJoinedArgs> playerJoined = new StandardEvent<PlayerJoinedArgs>();
     public final Event<GameStartedArgs> gameStarted = new StandardEvent<GameStartedArgs>();
     
     public void teleportPlayersToLobby()
     {
-        for(UUID playerId : players.keySet())
+        Collection<UUID> playerIds;
+        
+        
+        synchronized(players)
+        { playerIds = new HashSet<UUID>(players.keySet()); }
+        
+        for(UUID playerId : playerIds)
             CompatabilityAccess.getPlayer(playerId).teleportTo(lobbySpawn);
     }
     
