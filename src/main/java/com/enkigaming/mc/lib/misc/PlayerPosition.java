@@ -3,67 +3,146 @@ package com.enkigaming.mc.lib.misc;
 import com.enkigaming.lib.misc.coordinates.Point3d;
 import com.enkigaming.lib.misc.coordinates.XYZCoOrdSet;
 import com.enkigaming.lib.misc.coordinates.XYZPoint;
+import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
+import com.enkigaming.mc.lib.compatability.EnkiWorld;
 
 public class PlayerPosition extends Point3d
 {
-    public PlayerPosition(double x, double y, double z, double yaw, double pitch)
+    /*
+    
+    Let's just take a moment here to appreciate a few features from C# that Java could do with: default parameters,
+    named arguments, and the unified type system. Between these three features, the number of constructors required for
+    a class can be *drastically* shortened. Even if it was just thw two most easily implementable features, which are
+    default parameters and named arguments, things would be so much better. For instance, see this mess of
+    constructors? With these three features, the constructor list of this class would be:
+    
+    public PlayerPosition(int worldId = 0, double x, double y, double z, double yaw = 0, double pitch = 0) {}
+    public PlayerPosition(int worldId = 0, XYZCoOrdSet source,           double yaw = 0, double pitch = 0) {}
+    public PlayerPosition(int worldId = 0, XYZPoint source,              double yaw = 0, double pitch = 0) {}
+    
+    There. Isn't that better? All of those constructors condensed down to *three*. To implement default parameters and
+    named arguments wouldn't event require any modification to the JVM, they can be handled at compile-time. Features
+    like this may be considered syntactical sugar, but they *do help*.
+    
+    But are Oracle going to add these features? Are they buggery. When you bring up features like this to people that
+    are primarily Java fans, they just espouse the "simpler" way that we have at the moment. The problem with this is
+    that when they say simpler, they mean a simpler language, which translates as fewer features, etc. Certain features
+    introduce new syntax to the language, but make *usage* of the language simpler. On top of that, Oracle seem
+    desperate to try and differentiate themselves from C# as much as possible, which just seems to a form of
+    self-sabotage. I don't think Oracle are ever going to implement there features unless they either make a massive
+    about-face on the matter, or find a way that seems to them to be sufficiently different from the way C# does it.
+    
+    */
+    
+    public PlayerPosition(int worldId, double x, double y, double z, double yaw, double pitch)
     {
         super(x, y, z);
+        this.worldId = worldId;
         this.yaw = yaw;
         this.pitch = pitch;
     }
     
+    public PlayerPosition(double x, double y, double z, double yaw, double pitch)
+    { this(0, x, y, z, yaw, pitch); }
+    
+    public PlayerPosition(int worldId, double x, double y, double z)
+    { this(worldId, x, y, z, 0, 0); }
+    
     public PlayerPosition(double x, double y, double z)
-    { this(x, y, z, 0, 0); }
+    { this(0, x, y, z, 0, 0); }
+    
+    public PlayerPosition(int worldId, int x, int y, int z, int yaw, int pitch)
+    { this(worldId, (double)x, (double)y, (double)z, (double)yaw, (double)pitch); }
     
     public PlayerPosition(int x, int y, int z, int yaw, int pitch)
-    { this((double)x, (double)y, (double)z, (double)yaw, (double)pitch); }
+    { this(0, (double)x, (double)y, (double)z, (double)yaw, (double)pitch); }
+    
+    public PlayerPosition(int worldId, int x, int y, int z)
+    { this(worldId, (double)x, (double)y, (double)z, 0, 0); }
     
     public PlayerPosition(int x, int y, int z)
-    { this((double)x, (double)y, (double)z); }
+    { this(0, (double)x, (double)y, (double)z, 0, 0); }
+    
+    public PlayerPosition(int worldId, Number x, Number y, Number z, Number yaw, Number pitch)
+    { this(worldId, x.doubleValue(), y.doubleValue(), z.doubleValue(), yaw.doubleValue(), pitch.doubleValue()); }
     
     public PlayerPosition(Number x, Number y, Number z, Number yaw, Number pitch)
-    { this(x.doubleValue(), y.doubleValue(), z.doubleValue(), yaw.doubleValue(), pitch.doubleValue()); }
+    { this(0, x.doubleValue(), y.doubleValue(), z.doubleValue(), yaw.doubleValue(), pitch.doubleValue()); }
+    
+    public PlayerPosition(int worldId, Number x, Number y, Number z)
+    { this(worldId, x.doubleValue(), y.doubleValue(), z.doubleValue(), 0, 0); }
     
     public PlayerPosition(Number x, Number y, Number z)
-    { this(x.doubleValue(), y.doubleValue(), z.doubleValue()); }
+    { this(0, x.doubleValue(), y.doubleValue(), z.doubleValue(), 0, 0); }
+    
+    public PlayerPosition(int worldId, XYZPoint source, double yaw, double pitch)
+    { this(worldId, source.getX(), source.getY(), source.getZ(), yaw, pitch); }
     
     public PlayerPosition(XYZPoint source, double yaw, double pitch)
-    { this(source.getX(), source.getY(), source.getZ(), yaw, pitch); }
+    { this(0, source.getX(), source.getY(), source.getZ(), yaw, pitch); }
+    
+    public PlayerPosition(int worldId, XYZPoint source, int yaw, int pitch)
+    { this(worldId, source.getX(), source.getY(), source.getZ(), (double)yaw, (double)pitch); }
     
     public PlayerPosition(XYZPoint source, int yaw, int pitch)
-    { this(source.getX(), source.getY(), source.getZ(), (double)yaw, (double)pitch); }
+    { this(0, source.getX(), source.getY(), source.getZ(), (double)yaw, (double)pitch); }
+    
+    public PlayerPosition(int worldId, XYZPoint source, Number yaw, Number pitch)
+    { this(worldId, source.getX(), source.getY(), source.getZ(), yaw.intValue(), pitch.intValue()); }
     
     public PlayerPosition(XYZPoint source, Number yaw, Number pitch)
-    { this(source.getX(), source.getY(), source.getZ(), yaw.intValue(), pitch.intValue()); }
+    { this(0, source.getX(), source.getY(), source.getZ(), yaw.intValue(), pitch.intValue()); }
+    
+    public PlayerPosition(int worldId, XYZPoint source)
+    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
     
     public PlayerPosition(XYZPoint source)
-    { this((double)source.getX(), (double)source.getY(), (double)source.getZ()); }
+    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
+    
+    public PlayerPosition(int worldId, XYZCoOrdSet source, double yaw, double pitch)
+    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw, pitch); }
     
     public PlayerPosition(XYZCoOrdSet source, double yaw, double pitch)
-    { this((double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw, pitch); }
+    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw, pitch); }
+    
+    public PlayerPosition(int worldId, XYZCoOrdSet source, int yaw, int pitch)
+    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), (double)yaw, (double)pitch); }
     
     public PlayerPosition(XYZCoOrdSet source, int yaw, int pitch)
-    { this((double)source.getX(), (double)source.getY(), (double)source.getZ(), (double)yaw, (double)pitch); }
+    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), (double)yaw, (double)pitch); }
+    
+    public PlayerPosition(int worldId, XYZCoOrdSet source, Number yaw, Number pitch)
+    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw.doubleValue(), pitch.doubleValue()); }
     
     public PlayerPosition(XYZCoOrdSet source, Number yaw, Number pitch)
-    { this((double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw.doubleValue(), pitch.doubleValue()); }
+    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw.doubleValue(), pitch.doubleValue()); }
+    
+    public PlayerPosition(int worldId, XYZCoOrdSet source)
+    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
     
     public PlayerPosition(XYZCoOrdSet source)
-    { this((double)source.getX(), (double)source.getY(), (double)source.getZ()); }
+    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
     
     final protected double yaw, pitch;
+    final protected int worldId;
     
     public double getYaw()
     { return yaw; }
     
     public double getPitch()
     { return pitch; }
+    
+    public int getWorldId()
+    { return worldId; }
+    
+    public EnkiWorld getWorld()
+    { return CompatabilityAccess.getWorld(worldId); }
 
     @Override
     public int hashCode()
     {
         int hash = 7;
+        hash = 67 * hash + this.worldId;
         hash = 67 * hash + (int) (Double.doubleToLongBits(this.x)     ^ (Double.doubleToLongBits(this.x)     >>> 32));
         hash = 67 * hash + (int) (Double.doubleToLongBits(this.y)     ^ (Double.doubleToLongBits(this.y)     >>> 32));
         hash = 67 * hash + (int) (Double.doubleToLongBits(this.z)     ^ (Double.doubleToLongBits(this.z)     >>> 32));
