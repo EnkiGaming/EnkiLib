@@ -22,7 +22,7 @@ public class Point2d implements XYPoint
     public Point2d(XYCoOrdPair source)
     { this((double)source.getX(), (double)source.getY()); }
     
-    double x, y;
+    final protected double x, y;
     
     @Override
     public double getX()
@@ -31,4 +31,28 @@ public class Point2d implements XYPoint
     @Override
     public double getY()
     { return y; }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.x) ^ (Double.doubleToLongBits(this.x) >>> 32));
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.y) ^ (Double.doubleToLongBits(this.y) >>> 32));
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        final Point2d other = (Point2d) obj;
+        if(Double.doubleToLongBits(this.x) != Double.doubleToLongBits(other.x))
+            return false;
+        if(Double.doubleToLongBits(this.y) != Double.doubleToLongBits(other.y))
+            return false;
+        return true;
+    }
 }

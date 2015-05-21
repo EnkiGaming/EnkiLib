@@ -18,7 +18,7 @@ public class CoOrdinate3d implements XYZCoOrdSet
     public CoOrdinate3d(XYZPoint source)
     { this((int)source.getX(), (int)source.getY(), (int)source.getZ()); }
     
-    final int x, y, z;
+    final protected int x, y, z;
 
     @Override
     public int getX()

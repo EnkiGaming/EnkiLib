@@ -49,14 +49,30 @@ public class BlockCoOrdinate extends CoOrdinate3d
 
     @Override
     public int hashCode()
-    { return 17 * super.hashCode() + this.worldId; }
+    {
+        int hash = 7;
+        hash = 29 * hash + this.x;
+        hash = 29 * hash + this.y;
+        hash = 29 * hash + this.z;
+        hash = 29 * hash + this.worldId;
+        return hash;
+    }
 
     @Override
     public boolean equals(Object obj)
     {
-        if(!super.equals(obj))
+        if(obj == null)
             return false;
-        if(((BlockCoOrdinate)obj).getWorldId() != getWorldId())
+        if(getClass() != obj.getClass())
+            return false;
+        final BlockCoOrdinate other = (BlockCoOrdinate) obj;
+        if(this.x != other.x)
+            return false;
+        if(this.y != other.y)
+            return false;
+        if(this.z != other.z)
+            return false;
+        if(this.worldId != other.worldId)
             return false;
         return true;
     }
