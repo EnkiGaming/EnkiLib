@@ -105,13 +105,26 @@ public class ForgePlayer extends EnkiPlayer
     { return getPlatformSpecificInstance().worldObj.provider.dimensionId; }
 
     @Override
-    public void teleportTo(int worldId, int x, int y, int z)
+    public void teleportTo(int worldId, double x, double y, double z)
     {
         EntityPlayer player = getPlatformSpecificInstance();
         int currentWorldId = player.worldObj.provider.dimensionId;
         
         if(currentWorldId == worldId)
             player.setPosition(x, y, z);
+        else
+            /* teleport player to position in dimension */
+            throw new NotImplementedException("Still need to implement teleporting players across dimensions.");
+    }
+    
+    @Override
+    public void teleportTo(int worldId, double x, double y, double z, double yaw, double pitch)
+    {
+        EntityPlayer player = getPlatformSpecificInstance();
+        int currentWorldId = player.worldObj.provider.dimensionId;
+        
+        if(currentWorldId == worldId)
+            player.setPositionAndRotation(x, y, z, (float)yaw, (float)pitch);
         else
             /* teleport player to position in dimension */
             throw new NotImplementedException("Still need to implement teleporting players across dimensions.");

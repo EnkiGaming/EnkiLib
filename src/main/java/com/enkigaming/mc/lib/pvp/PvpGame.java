@@ -6,6 +6,7 @@ import com.enkigaming.lib.events.StandardEvent;
 import com.enkigaming.lib.events.StandardEventArgs;
 import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
 import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
+import com.enkigaming.mc.lib.misc.PlayerPosition;
 import com.enkigaming.mc.lib.misc.TickCountdownTimer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,24 +87,24 @@ public abstract class PvpGame
     
     public static class PlayerJoinedArgs extends StandardEventArgs
     {
-        public PlayerJoinedArgs(UUID playerId, BlockCoOrdinate startingPosition)
+        public PlayerJoinedArgs(UUID playerId, PlayerPosition startingPosition)
         {
             this.playerId = playerId;
             this.startingPosition = startingPosition;
         }
         
         UUID playerId;
-        BlockCoOrdinate startingPosition;
+        PlayerPosition startingPosition;
         
         public UUID getPlayerId()
         { return playerId; }
         
-        public BlockCoOrdinate getStartingPosition()
+        public PlayerPosition getStartingPosition()
         { return startingPosition; }
         
-        public BlockCoOrdinate setStartingPosition(BlockCoOrdinate newStartingPosition)
+        public PlayerPosition setStartingPosition(PlayerPosition newStartingPosition)
         {
-            BlockCoOrdinate temp = startingPosition;
+            PlayerPosition temp = startingPosition;
             startingPosition = newStartingPosition;
             return temp;
         }
@@ -206,7 +207,7 @@ public abstract class PvpGame
     public PvpGame()
     {
         players = new HashMap<UUID, PlayerGameState>();
-        lobbySpawn = new BlockCoOrdinate();
+        lobbySpawn = null;
         possibleGameStates = getNewGameStatesObject();
         gameState = possibleGameStates.waitingForNewGame;
         lobbyTimer = new TickCountdownTimer(60);
@@ -239,7 +240,7 @@ public abstract class PvpGame
     
     final Map<UUID, PlayerGameState> players;
     Collection<PvpTeam> teams;
-    BlockCoOrdinate lobbySpawn;
+    PlayerPosition lobbySpawn;
     GameStates possibleGameStates;
     GameState gameState;
     TickCountdownTimer lobbyTimer, gameTimer;
@@ -252,8 +253,13 @@ public abstract class PvpGame
     
     public void teleportPlayersToLobby()
     {
-        Collection<UUID> playerIds;
+        if(lobbySpawn == null)
+        {
+            System.out.print("Attempted to teleport PvpGame players to lobby when no lobby position has been set.");
+            return;
+        }
         
+        Collection<UUID> playerIds;
         
         synchronized(players)
         { playerIds = new HashSet<UUID>(players.keySet()); }
@@ -263,7 +269,15 @@ public abstract class PvpGame
     }
     
     public void teleportPlayerToLobby(UUID playerId)
-    { CompatabilityAccess.getPlayer(playerId).teleportTo(lobbySpawn); }
+    {
+        if(lobbySpawn == null)
+        {
+            System.out.print("Attempted to teleport a PvpGame player to lobby when no lobby position has been set.");
+            return;
+        }
+        
+        CompatabilityAccess.getPlayer(playerId).teleportTo(lobbySpawn);
+    }
     
     public GameStates getPossibleGameStates()
     { return possibleGameStates; }

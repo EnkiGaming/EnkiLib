@@ -16,9 +16,9 @@ public class PlayerPosition extends Point3d
     default parameters and named arguments, things would be so much better. For instance, see this mess of
     constructors? With these three features, the constructor list of this class would be:
     
-    public PlayerPosition(int worldId = 0, double x, double y, double z, double yaw = 0, double pitch = 0) {}
-    public PlayerPosition(int worldId = 0, XYZCoOrdSet source,           double yaw = 0, double pitch = 0) {}
-    public PlayerPosition(int worldId = 0, XYZPoint source,              double yaw = 0, double pitch = 0) {}
+    public PlayerPosition(int worldId = 0, double x, double y, double z, double yaw = Double.NaN, double pitch = Double.NaN) {}
+    public PlayerPosition(int worldId = 0, XYZCoOrdSet source,           double yaw = Double.NaN, double pitch = Double.NaN) {}
+    public PlayerPosition(int worldId = 0, XYZPoint source,              double yaw = Double.NaN, double pitch = Double.NaN) {}
     
     There. Isn't that better? All of those constructors condensed down to *three*. To implement default parameters and
     named arguments wouldn't event require any modification to the JVM, they can be handled at compile-time. Features
@@ -46,10 +46,10 @@ public class PlayerPosition extends Point3d
     { this(0, x, y, z, yaw, pitch); }
     
     public PlayerPosition(int worldId, double x, double y, double z)
-    { this(worldId, x, y, z, 0, 0); }
+    { this(worldId, x, y, z, 0, 0); noDirection = true; }
     
     public PlayerPosition(double x, double y, double z)
-    { this(0, x, y, z, 0, 0); }
+    { this(0, x, y, z, 0, 0); noDirection = true; }
     
     public PlayerPosition(int worldId, int x, int y, int z, int yaw, int pitch)
     { this(worldId, (double)x, (double)y, (double)z, (double)yaw, (double)pitch); }
@@ -58,10 +58,10 @@ public class PlayerPosition extends Point3d
     { this(0, (double)x, (double)y, (double)z, (double)yaw, (double)pitch); }
     
     public PlayerPosition(int worldId, int x, int y, int z)
-    { this(worldId, (double)x, (double)y, (double)z, 0, 0); }
+    { this(worldId, (double)x, (double)y, (double)z, 0, 0); noDirection = true; }
     
     public PlayerPosition(int x, int y, int z)
-    { this(0, (double)x, (double)y, (double)z, 0, 0); }
+    { this(0, (double)x, (double)y, (double)z, 0, 0); noDirection = true; }
     
     public PlayerPosition(int worldId, Number x, Number y, Number z, Number yaw, Number pitch)
     { this(worldId, x.doubleValue(), y.doubleValue(), z.doubleValue(), yaw.doubleValue(), pitch.doubleValue()); }
@@ -70,10 +70,10 @@ public class PlayerPosition extends Point3d
     { this(0, x.doubleValue(), y.doubleValue(), z.doubleValue(), yaw.doubleValue(), pitch.doubleValue()); }
     
     public PlayerPosition(int worldId, Number x, Number y, Number z)
-    { this(worldId, x.doubleValue(), y.doubleValue(), z.doubleValue(), 0, 0); }
+    { this(worldId, x.doubleValue(), y.doubleValue(), z.doubleValue(), 0, 0); noDirection = true; }
     
     public PlayerPosition(Number x, Number y, Number z)
-    { this(0, x.doubleValue(), y.doubleValue(), z.doubleValue(), 0, 0); }
+    { this(0, x.doubleValue(), y.doubleValue(), z.doubleValue(), 0, 0); noDirection = true; }
     
     public PlayerPosition(int worldId, XYZPoint source, double yaw, double pitch)
     { this(worldId, source.getX(), source.getY(), source.getZ(), yaw, pitch); }
@@ -94,10 +94,10 @@ public class PlayerPosition extends Point3d
     { this(0, source.getX(), source.getY(), source.getZ(), yaw.intValue(), pitch.intValue()); }
     
     public PlayerPosition(int worldId, XYZPoint source)
-    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
+    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); noDirection = true; }
     
     public PlayerPosition(XYZPoint source)
-    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
+    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); noDirection = true; }
     
     public PlayerPosition(int worldId, XYZCoOrdSet source, double yaw, double pitch)
     { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw, pitch); }
@@ -118,13 +118,14 @@ public class PlayerPosition extends Point3d
     { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), yaw.doubleValue(), pitch.doubleValue()); }
     
     public PlayerPosition(int worldId, XYZCoOrdSet source)
-    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
+    { this(worldId, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); noDirection = true; }
     
     public PlayerPosition(XYZCoOrdSet source)
-    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); }
+    { this(0, (double)source.getX(), (double)source.getY(), (double)source.getZ(), 0, 0); noDirection = true; }
     
     final protected double yaw, pitch;
     final protected int worldId;
+    protected boolean noDirection = false;
     
     public double getYaw()
     { return yaw; }
@@ -137,6 +138,9 @@ public class PlayerPosition extends Point3d
     
     public EnkiWorld getWorld()
     { return CompatabilityAccess.getWorld(worldId); }
+    
+    public boolean directionWasSpecified()
+    { return !noDirection; }
 
     @Override
     public int hashCode()
@@ -148,6 +152,7 @@ public class PlayerPosition extends Point3d
         hash = 67 * hash + (int) (Double.doubleToLongBits(this.z)     ^ (Double.doubleToLongBits(this.z)     >>> 32));
         hash = 67 * hash + (int) (Double.doubleToLongBits(this.yaw)   ^ (Double.doubleToLongBits(this.yaw)   >>> 32));
         hash = 67 * hash + (int) (Double.doubleToLongBits(this.pitch) ^ (Double.doubleToLongBits(this.pitch) >>> 32));
+        hash = 67 * hash + (this.noDirection ? 1 : 0);
         return hash;
     }
 
