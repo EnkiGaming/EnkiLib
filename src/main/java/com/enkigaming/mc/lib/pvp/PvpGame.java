@@ -442,14 +442,17 @@ public abstract class PvpGame
 
         try
         {
-            teams = getNewTeams(startedArgs.getPlayerIds());
-            startedArgs.teamsPlaying = new HashSet<PvpTeam>(teams);
-                
-            if(teams.size() < minNumberOfTeams)
+            synchronized(teamsBusy)
             {
-                startedArgs.setStartingMessage("Not enough players to start.");
-                abort = true;
-                startedArgs.aborted = true;
+                teams = getNewTeams(startedArgs.getPlayerIds());
+                startedArgs.teamsPlaying = new HashSet<PvpTeam>(teams);
+                
+                if(teams.size() < minNumberOfTeams)
+                {
+                    startedArgs.setStartingMessage("Not enough players to start.");
+                    abort = true;
+                    startedArgs.aborted = true;
+                }
             }
             
             gameStarted.raise(this, startedArgs);
