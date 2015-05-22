@@ -348,6 +348,12 @@ public class StandardEventArgs implements EventArgs
         synchronized(listenerQueueBusy)
         { return listenerQueue; }
     }
+    
+    protected void checkMutability()
+    {
+        if(!shouldBeMutable())
+            throw new EventArgsModifiedWhenImmutableException();
+    }
 
     @Override
     public TechnicalAccessor getTechnicalAccessor()
