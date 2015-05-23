@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -236,16 +237,21 @@ public abstract class PvpGame
     
     public static class GameFinishedArgs extends StandardEventArgs
     {
-        public GameFinishedArgs(PvpTeam winningTeam, Collection<UUID> remainingPlayers, String gameOverMessage)
+        public GameFinishedArgs(PvpTeam winningTeam,
+                                Collection<UUID> remainingPlayers,
+                                String gameOverMessage,
+                                String winnerMessage)
         {
-            this.winningTeam = winningTeam;
+            this.winningTeam      = winningTeam;
             this.remainingPlayers = remainingPlayers;
-            this.gameOverMessage = gameOverMessage;
+            this.gameOverMessage  = gameOverMessage;
+            this.winnerMessage    = winnerMessage;
         }
         
         PvpTeam winningTeam;
         Collection<UUID> remainingPlayers;
         String gameOverMessage;
+        String winnerMessage;
         
         public PvpTeam getWinningTeam()
         { return winningTeam; }
@@ -261,6 +267,17 @@ public abstract class PvpGame
             checkMutability();
             String old = gameOverMessage;
             gameOverMessage = newMessage;
+            return old;
+        }
+        
+        public String getWinnerMessage()
+        { return winnerMessage; }
+        
+        public String setWinnerMessage(String newMessage)
+        {
+            checkMutability();
+            String old = winnerMessage;
+            winnerMessage = newMessage;
             return old;
         }
     }
@@ -313,6 +330,7 @@ public abstract class PvpGame
     public final Event<PlayerJoinedArgs> playerJoined = new StandardEvent<PlayerJoinedArgs>();
     public final Event<PlayerLeftArgs>   playerLeft   = new StandardEvent<PlayerLeftArgs>();
     public final Event<GameStartedArgs>  gameStarted  = new StandardEvent<GameStartedArgs>();
+    public final Event<GameFinishedArgs> gameFinished = new StandardEvent<GameFinishedArgs>();
     
     public void teleportPlayersToLobby()
     {
@@ -574,7 +592,47 @@ public abstract class PvpGame
     
     public void declareWinner(PvpTeam team)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        PlayerPosition destination;
+        
+        synchronized(lobbySpawnBusy)
+        { destination = lobbySpawn; }
+        
+        GameFinishedArgs args;
+        List<UUID> remainingPlayers;
+        String winnerMessage = "Congratulations! You won!";
+        
+        synchronized(players)
+        {
+            remainingPlayers = new ArrayList<UUID>();
+            
+            for(Entry<UUID, PlayerGameState> i : new ArrayList<Entry<UUID, PlayerGameState>>(players.entrySet()))
+            {
+                if(players.put(i.getKey(), PlayerGameState.inLobby) == PlayerGameState.inGame)
+                    remainingPlayers.add(i.getKey());
+            }
+        }
+        
+        StringBuilder finishedMessageBuilder = new StringBuilder("Game over! The winners were: ");
+        
+        for(int i = 0; i < remainingPlayers.size(); i++)
+        {
+            UUID playerId = remainingPlayers.get(i);
+            EnkiPlayer player = CompatabilityAccess.getPlayer(playerId);
+            
+            if(i == remainingPlayers.size() - 1)
+                finishedMessageBuilder.append("and ");
+            
+            finishedMessageBuilder.append(player.getUsername());
+            
+            if(i != remainingPlayers.size() - 1)
+                finishedMessageBuilder.append(", ");
+            else
+                finishedMessageBuilder.append(".");
+        }
+        
+        args = new GameFinishedArgs(team, remainingPlayers, finishedMessageBuilder.toString(), winnerMessage);
+        
+        /* continue implementing here. */
     }
     
     public void declareRemainingTeamWinnerIfOnlyOneLeft()
