@@ -159,8 +159,7 @@ public abstract class PvpGame
                                GameState initialGameState,
                                String startingMessage,
                                int gameTimeInMinutes,
-                               int minTeamsRequired,
-                               boolean aborted)
+                               int minTeamsRequired)
         {
             this.playersPlaying    = playersPlaying;
             this.teamsPlaying      = teamsPlaying;
@@ -168,7 +167,6 @@ public abstract class PvpGame
             this.gameTimeInMinutes = gameTimeInMinutes;
             this.minTeamsRequired  = minTeamsRequired;
             this.initialGameState  = initialGameState;
-            this.aborted           = aborted;
         }
         
         Collection<UUID> playersPlaying;
@@ -177,7 +175,6 @@ public abstract class PvpGame
         String startingMessage;
         int gameTimeInMinutes;
         int minTeamsRequired;
-        boolean aborted;
         
         public Collection<UUID> getPlayerIds()
         { return new HashSet<UUID>(playersPlaying); }
@@ -230,9 +227,6 @@ public abstract class PvpGame
             initialGameState = newState;
             return old;
         }
-        
-        public boolean isAborted()
-        { return aborted; }
     }
     
     public static class GameFinishedArgs extends StandardEventArgs
@@ -494,8 +488,7 @@ public abstract class PvpGame
                                                           possibleGameStates.inGame,
                                                           startMessage,
                                                           gameTimeInMinutes,
-                                                          minNumberOfTeams,
-                                                          false);
+                                                          minNumberOfTeams);
 
         try
         {
@@ -508,7 +501,7 @@ public abstract class PvpGame
                 {
                     startedArgs.setStartingMessage("Not enough players to start.");
                     abort = true;
-                    startedArgs.aborted = true;
+                    startedArgs.setCancelled(true);
                 }
             }
             

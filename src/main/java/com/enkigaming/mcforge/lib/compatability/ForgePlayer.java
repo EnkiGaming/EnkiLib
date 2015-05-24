@@ -1,16 +1,20 @@
 package com.enkigaming.mcforge.lib.compatability;
 
 import com.enkigaming.lib.events.exceptions.NoSuchUsernameException;
+import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
 import com.enkigaming.mcforge.lib.EnkiLib;
 import com.enkigaming.mcforge.lib.eventlisteners.compatability.ForgePlayerEventBridge;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
-import org.apache.commons.lang3.NotImplementedException;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.World;
 
 public class ForgePlayer extends EnkiPlayer
 {
@@ -108,26 +112,65 @@ public class ForgePlayer extends EnkiPlayer
     public void teleportTo(int worldId, double x, double y, double z)
     {
         EntityPlayer player = getPlatformSpecificInstance();
+        player.mountEntity(null);
         int currentWorldId = player.worldObj.provider.dimensionId;
         
         if(currentWorldId == worldId)
             player.setPosition(x, y, z);
         else
-            /* teleport player to position in dimension */
-            throw new NotImplementedException("Still need to implement teleporting players across dimensions.");
+        {
+            // Using LatvianModder's implementatino of cross-dimensional teleporting as a guide:
+            
+            World oldWorld = (World)CompatabilityAccess.getWorld(currentWorldId).getPlatformSpecificInstance();
+            World newWorld = (World)CompatabilityAccess.getWorld(worldId).getPlatformSpecificInstance();
+            
+            oldWorld.removeEntity(player);
+            player.setPosition(x, y, z);
+            newWorld.getChunkProvider().loadChunk(MathHelper.floor_double(x) >> 4, MathHelper.floor_double(z) >> 4);
+            player.isDead = false;
+            NBTTagCompound entityNBT = new NBTTagCompound();
+            entityNBT.setString("id", EntityList.getEntityString(player));
+            player.writeToNBT(entityNBT);
+            player.isDead = true;
+            player = (EntityPlayer)EntityList.createEntityFromNBT(entityNBT, newWorld);
+            player.dimension = worldId;
+            
+            newWorld.spawnEntityInWorld(player);
+            player.setWorld(newWorld);
+        }
     }
     
     @Override
     public void teleportTo(int worldId, double x, double y, double z, double yaw, double pitch)
     {
         EntityPlayer player = getPlatformSpecificInstance();
+        player.mountEntity(null);
         int currentWorldId = player.worldObj.provider.dimensionId;
         
         if(currentWorldId == worldId)
             player.setPositionAndRotation(x, y, z, (float)yaw, (float)pitch);
         else
-            /* teleport player to position in dimension */
-            throw new NotImplementedException("Still need to implement teleporting players across dimensions.");
+        {
+            // Using LatvianModder's implementatino of cross-dimensional teleporting as a guide:
+            
+            World oldWorld = (World)CompatabilityAccess.getWorld(currentWorldId).getPlatformSpecificInstance();
+            World newWorld = (World)CompatabilityAccess.getWorld(worldId).getPlatformSpecificInstance();
+            
+            oldWorld.removeEntity(player);
+            //player.setPosition(x, y, z);
+            player.setPositionAndRotation(x, y, z, (float)yaw, (float)pitch);
+            newWorld.getChunkProvider().loadChunk(MathHelper.floor_double(x) >> 4, MathHelper.floor_double(z) >> 4);
+            player.isDead = false;
+            NBTTagCompound entityNBT = new NBTTagCompound();
+            entityNBT.setString("id", EntityList.getEntityString(player));
+            player.writeToNBT(entityNBT);
+            player.isDead = true;
+            player = (EntityPlayer)EntityList.createEntityFromNBT(entityNBT, newWorld);
+            player.dimension = worldId;
+            
+            newWorld.spawnEntityInWorld(player);
+            player.setWorld(newWorld);
+        }
     }
     
     @Override
