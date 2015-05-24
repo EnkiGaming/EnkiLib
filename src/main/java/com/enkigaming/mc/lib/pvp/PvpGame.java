@@ -239,17 +239,23 @@ public abstract class PvpGame
     {
         public GameFinishedArgs(PvpTeam winningTeam,
                                 Collection<UUID> remainingPlayers,
+                                PlayerPosition respawnLocation,
+                                int minutesUntilNextGame,
                                 String gameOverMessage,
                                 String winnerMessage)
         {
-            this.winningTeam      = winningTeam;
-            this.remainingPlayers = remainingPlayers;
-            this.gameOverMessage  = gameOverMessage;
-            this.winnerMessage    = winnerMessage;
+            this.winningTeam          = winningTeam;
+            this.remainingPlayers     = remainingPlayers;
+            this.respawnLocation      = respawnLocation;
+            this.minutesUntilNextGame = minutesUntilNextGame;
+            this.gameOverMessage      = gameOverMessage;
+            this.winnerMessage        = winnerMessage;
         }
         
         PvpTeam winningTeam;
         Collection<UUID> remainingPlayers;
+        PlayerPosition respawnLocation;
+        int minutesUntilNextGame;
         String gameOverMessage;
         String winnerMessage;
         
@@ -257,7 +263,7 @@ public abstract class PvpGame
         { return winningTeam; }
         
         public Collection<UUID> getRemainingPlayers()
-        { return remainingPlayers; }
+        { return new ArrayList<UUID>(remainingPlayers); }
         
         public String getGameOverMessage()
         { return gameOverMessage; }
@@ -278,6 +284,28 @@ public abstract class PvpGame
             checkMutability();
             String old = winnerMessage;
             winnerMessage = newMessage;
+            return old;
+        }
+        
+        public PlayerPosition getRespawnLocation()
+        { return respawnLocation; }
+        
+        public PlayerPosition setRespawnLocation(PlayerPosition newLocation)
+        {
+            checkMutability();
+            PlayerPosition old = respawnLocation;
+            respawnLocation = newLocation;
+            return old;
+        }
+        
+        public int getMinutesUntilNextGame()
+        { return minutesUntilNextGame; }
+        
+        public int setMinutesUntilNextGame(int minutes)
+        {
+            checkMutability();
+            int old = minutesUntilNextGame;
+            minutesUntilNextGame = minutes;
             return old;
         }
     }
@@ -347,7 +375,7 @@ public abstract class PvpGame
         }
         
         synchronized(players)
-        { playerIds = new HashSet<UUID>(players.keySet()); }
+        { playerIds = new ArrayList<UUID>(players.keySet()); }
         
         for(UUID playerId : playerIds)
             CompatabilityAccess.getPlayer(playerId).teleportTo(destination);
@@ -367,6 +395,17 @@ public abstract class PvpGame
         }
         
         CompatabilityAccess.getPlayer(playerId).teleportTo(destination);
+    }
+    
+    public void teleportPlayersTo(PlayerPosition destination)
+    {
+        Collection<UUID> playerIds;
+        
+        synchronized(players)
+        { playerIds = new ArrayList<UUID>(players.keySet()); }
+        
+        for(UUID playerId : playerIds)
+            CompatabilityAccess.getPlayer(playerId).teleportTo(destination);
     }
     
     public GameStates getPossibleGameStates()
@@ -630,9 +669,38 @@ public abstract class PvpGame
                 finishedMessageBuilder.append(".");
         }
         
-        args = new GameFinishedArgs(team, remainingPlayers, finishedMessageBuilder.toString(), winnerMessage);
+        args = new GameFinishedArgs(
+                team, remainingPlayers, destination, 5, finishedMessageBuilder.toString(), winnerMessage);
         
-        /* continue implementing here. */
+        gameFinished.raise(this, args);
+        
+        try
+        {
+            if(!args.isCancelled())
+            {
+                team.messagePlayers(args.getWinnerMessage());
+                messagePlayers(args.getGameOverMessage());
+                
+                synchronized(players)
+                {
+                    for(UUID i : new ArrayList<UUID>(players.keySet()))
+                        players.put(i, PlayerGameState.inLobby);
+                }
+                
+                synchronized(teams)
+                { teams.clear(); }
+                
+                teleportPlayersTo(args.getRespawnLocation());
+                gameState = possibleGameStates.waitingForNewGame;
+            }
+            else
+                System.out.print("The PvpGame.gameFinished event was cancelled by a listener.");
+        }
+        finally
+        {
+            gameFinished.raisePostEvent(this, args);
+            startLobbyCountdown(args.getMinutesUntilNextGame());
+        }
     }
     
     public void declareRemainingTeamWinnerIfOnlyOneLeft()
