@@ -11,11 +11,13 @@ import java.util.UUID;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
+import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
@@ -23,6 +25,34 @@ import net.minecraftforge.common.DimensionManager;
 
 public class ForgePlayer extends EnkiPlayer
 {
+    protected class ForgePlayerTeleporter extends Teleporter
+    {
+        // Provided by mcjty, ty <3
+        
+        public ForgePlayerTeleporter(WorldServer world, double x, double y, double z)
+        {
+            super(world);
+            this.worldServerInstance = world;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+        
+        private final WorldServer worldServerInstance;
+        private double x, y, z;
+
+        @Override
+        public void placeInPortal(Entity pEntity, double p2, double p3, double p4, float p5)
+        {
+            this.worldServerInstance.getBlock((int) this.x, (int) this.y, (int) this.z);   //dummy load to maybe gen chunk
+
+            pEntity.setPosition(this.x, this.y, this.z);
+            pEntity.motionX = 0.0f;
+            pEntity.motionY = 0.0f;
+            pEntity.motionZ = 0.0f;
+        }
+    }
+    
     public ForgePlayer(UUID playerId)
     {
         this.playerId = playerId;
@@ -134,46 +164,40 @@ public class ForgePlayer extends EnkiPlayer
         EntityPlayer player = this.getPlatformSpecificInstance();
         player.mountEntity(null);
         int oldWorldId = player.dimension;
+        double fixedYaw = yaw, fixedPitch = pitch;
         
         if(Double.isNaN(yaw) || Double.isNaN(pitch)) // If direction is not provided
         {
-            yaw = player.rotationYaw;
-            pitch = player.rotationPitch;
+            fixedYaw = player.rotationYaw;
+            fixedPitch = player.rotationPitch;
         }
         
         if(newWorldId == null || newWorldId == oldWorldId) // if world is not provided/not changed.
         {
-            player.setLocationAndAngles(x, y, z, (float)yaw, (float)pitch);
+            player.setLocationAndAngles(x, y, z, (float)fixedYaw, (float)fixedPitch);
             return;
         }
         
-        World oldWorld = DimensionManager.getWorld(oldWorldId);
+        // The following is borrowed RFTools, provided and with permission from mcjty. Thankyou <3
         
-        if (!oldWorld.isRemote && !player.isDead)
+        int oldDimension = player.worldObj.provider.dimensionId;
+        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) player;
+        WorldServer worldServer = MinecraftServer.getServer().worldServerForDimension(newWorldId);
+        player.addExperienceLevel(0);
+        MinecraftServer.getServer().getConfigurationManager().transferPlayerToDimension(entityPlayerMP, newWorldId, new ForgePlayerTeleporter(worldServer, x, y, z));
+        
+        if (oldDimension == 1)
         {
-            MinecraftServer server = MinecraftServer.getServer();
-            WorldServer oldWorldServer = server.worldServerForDimension(oldWorldId);
-            WorldServer newWorldServer = server.worldServerForDimension(newWorldId);
+            // For some reason teleporting out of the end does weird things.
             
-            player.dimension = newWorldId;
-            oldWorld.removeEntity(player);
-            player.isDead = false;
-            
-            if (player.isEntityAlive())
-            {
-                player.setLocationAndAngles(x, y, z, (float)yaw, (float)pitch);
-                newWorldServer.spawnEntityInWorld(player);
-                newWorldServer.updateEntityWithOptionalForce(player, false);
-            }
-
-            player.setWorld(newWorldServer);
-            Entity playerInNewWorld = EntityList.createEntityByName(EntityList.getEntityString(player), newWorldServer);
-            playerInNewWorld.copyDataFrom(player, true);
-            newWorldServer.spawnEntityInWorld(playerInNewWorld);
-            player.isDead = true; // Old player entity.
-            oldWorldServer.resetUpdateEntityTick();
-            newWorldServer.resetUpdateEntityTick();
+            player.setPositionAndUpdate(x, y, z);
+            worldServer.spawnEntityInWorld(player);
+            worldServer.updateEntityWithOptionalForce(player, false);
         }
+        
+        // Why is EntityPlayer.setRotation a protected method?
+        player.rotationYaw = (float)fixedYaw % 360.0F;
+        player.rotationPitch = (float)fixedPitch % 360.0F;
     }
     
     @Override
