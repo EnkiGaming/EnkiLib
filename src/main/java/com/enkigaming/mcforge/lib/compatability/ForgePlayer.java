@@ -8,13 +8,18 @@ import com.enkigaming.mcforge.lib.eventlisteners.compatability.ForgePlayerEventB
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 
 public class ForgePlayer extends EnkiPlayer
 {
@@ -109,67 +114,65 @@ public class ForgePlayer extends EnkiPlayer
     { return getPlatformSpecificInstance().worldObj.provider.dimensionId; }
 
     @Override
-    public void teleportTo(int worldId, double x, double y, double z)
-    {
-        EntityPlayer player = getPlatformSpecificInstance();
-        player.mountEntity(null);
-        int currentWorldId = player.worldObj.provider.dimensionId;
-        
-        if(currentWorldId == worldId)
-            player.setPosition(x, y, z);
-        else
-        {
-            // Using LatvianModder's implementatino of cross-dimensional teleporting as a guide:
-            
-            World oldWorld = (World)CompatabilityAccess.getWorld(currentWorldId).getPlatformSpecificInstance();
-            World newWorld = (World)CompatabilityAccess.getWorld(worldId).getPlatformSpecificInstance();
-            
-            oldWorld.removeEntity(player);
-            player.setPosition(x, y, z);
-            newWorld.getChunkProvider().loadChunk(MathHelper.floor_double(x) >> 4, MathHelper.floor_double(z) >> 4);
-            player.isDead = false;
-            NBTTagCompound entityNBT = new NBTTagCompound();
-            entityNBT.setString("id", EntityList.getEntityString(player));
-            player.writeToNBT(entityNBT);
-            player.isDead = true;
-            player = (EntityPlayer)EntityList.createEntityFromNBT(entityNBT, newWorld);
-            player.dimension = worldId;
-            
-            newWorld.spawnEntityInWorld(player);
-            player.setWorld(newWorld);
-        }
-    }
+    public void teleportTo(int worldId, double x, double y, double z, double yaw, double pitch)
+    { teleportTo_mainMethod(worldId, x, y, z, yaw, pitch); }
     
     @Override
-    public void teleportTo(int worldId, double x, double y, double z, double yaw, double pitch)
+    public void teleportTo(int worldId, double x, double y, double z)
+    { teleportTo_mainMethod(worldId, x, y, z, Double.NaN, Double.NaN); }
+    
+    @Override
+    public void teleportTo(double x, double y, double z, double yaw, double pitch)
+    { teleportTo_mainMethod(null, x, y, z, yaw, pitch); }
+    
+    @Override
+    public void teleportTo(double x, double y, double z)
+    { teleportTo_mainMethod(null, x, y, z, Double.NaN, Double.NaN); }
+    
+    private void teleportTo_mainMethod(Integer newWorldId, double x, double y, double z, double yaw, double pitch)
     {
-        EntityPlayer player = getPlatformSpecificInstance();
+        EntityPlayer player = this.getPlatformSpecificInstance();
         player.mountEntity(null);
-        int currentWorldId = player.worldObj.provider.dimensionId;
+        int oldWorldId = player.dimension;
         
-        if(currentWorldId == worldId)
-            player.setPositionAndRotation(x, y, z, (float)yaw, (float)pitch);
-        else
+        if(Double.isNaN(yaw) || Double.isNaN(pitch)) // If direction is not provided
         {
-            // Using LatvianModder's implementatino of cross-dimensional teleporting as a guide:
+            yaw = player.rotationYaw;
+            pitch = player.rotationPitch;
+        }
+        
+        if(newWorldId == null || newWorldId == oldWorldId) // if world is not provided/not changed.
+        {
+            player.setLocationAndAngles(x, y, z, (float)yaw, (float)pitch);
+            return;
+        }
+        
+        World oldWorld = DimensionManager.getWorld(oldWorldId);
+        
+        if (!oldWorld.isRemote && !player.isDead)
+        {
+            MinecraftServer server = MinecraftServer.getServer();
+            WorldServer oldWorldServer = server.worldServerForDimension(oldWorldId);
+            WorldServer newWorldServer = server.worldServerForDimension(newWorldId);
             
-            World oldWorld = (World)CompatabilityAccess.getWorld(currentWorldId).getPlatformSpecificInstance();
-            World newWorld = (World)CompatabilityAccess.getWorld(worldId).getPlatformSpecificInstance();
-            
+            player.dimension = newWorldId;
             oldWorld.removeEntity(player);
-            //player.setPosition(x, y, z);
-            player.setPositionAndRotation(x, y, z, (float)yaw, (float)pitch);
-            newWorld.getChunkProvider().loadChunk(MathHelper.floor_double(x) >> 4, MathHelper.floor_double(z) >> 4);
             player.isDead = false;
-            NBTTagCompound entityNBT = new NBTTagCompound();
-            entityNBT.setString("id", EntityList.getEntityString(player));
-            player.writeToNBT(entityNBT);
-            player.isDead = true;
-            player = (EntityPlayer)EntityList.createEntityFromNBT(entityNBT, newWorld);
-            player.dimension = worldId;
             
-            newWorld.spawnEntityInWorld(player);
-            player.setWorld(newWorld);
+            if (player.isEntityAlive())
+            {
+                player.setLocationAndAngles(x, y, z, (float)yaw, (float)pitch);
+                newWorldServer.spawnEntityInWorld(player);
+                newWorldServer.updateEntityWithOptionalForce(player, false);
+            }
+
+            player.setWorld(newWorldServer);
+            Entity playerInNewWorld = EntityList.createEntityByName(EntityList.getEntityString(player), newWorldServer);
+            playerInNewWorld.copyDataFrom(player, true);
+            newWorldServer.spawnEntityInWorld(playerInNewWorld);
+            player.isDead = true; // Old player entity.
+            oldWorldServer.resetUpdateEntityTick();
+            newWorldServer.resetUpdateEntityTick();
         }
     }
     

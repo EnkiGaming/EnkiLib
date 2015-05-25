@@ -41,6 +41,10 @@ public abstract class EnkiPlayer
     
     public abstract void teleportTo(int worldId, double x, double y, double z);
     
+    public abstract void teleportTo(double x, double y, double z, double yaw, double pitch);
+    
+    public abstract void teleportTo(double x, double y, double z);
+    
     public void teleportTo(BlockCoOrdinate destination)
     {
         this.teleportTo(destination.getWorldId(),
