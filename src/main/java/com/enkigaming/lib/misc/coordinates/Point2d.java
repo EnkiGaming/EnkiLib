@@ -1,7 +1,5 @@
 package com.enkigaming.lib.misc.coordinates;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 public class Point2d implements XYPoint
 {
     public Point2d(double x, double y)

@@ -1,8 +1,6 @@
 package com.enkigaming.lib.filehandling;
 
 import org.junit.Test;
-import com.enkigaming.lib.testing.ThrowableAssertion;
-import static org.junit.Assert.*;
 import static com.enkigaming.lib.testing.Assert.*;
 import java.util.Arrays;
 import java.util.List;

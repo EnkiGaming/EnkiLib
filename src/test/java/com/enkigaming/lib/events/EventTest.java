@@ -10,12 +10,9 @@ import com.enkigaming.lib.testing.ThrowableAssertion;
 import static org.junit.Assert.*;
 import static com.enkigaming.lib.testing.Assert.*;
 import com.enkigaming.lib.tuples.Pair;
-import com.enkigaming.lib.tuples.Triplet;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import org.apache.commons.lang3.NotImplementedException;
 
 public abstract class EventTest
 {
