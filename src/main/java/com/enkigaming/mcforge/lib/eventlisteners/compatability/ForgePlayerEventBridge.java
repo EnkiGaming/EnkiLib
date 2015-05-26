@@ -54,7 +54,7 @@ public class ForgePlayerEventBridge
         PlayerJoinedArgs serverEventArgs = new PlayerJoinedArgs(event.player.getGameProfile().getId());
         
         for(ForgePlayer i : getForgePlayerObjects(event.player.getGameProfile().getId()))
-            toRaise.put(i.connected, new ConnectedArgs());
+            toRaise.put(i.connected, new ConnectedArgs(event.player.getGameProfile().getId()));
         
         try
         { CompatabilityAccess.getServer().playerJoined.raiseAlongside(this, serverEventArgs, toRaise); }
@@ -69,7 +69,7 @@ public class ForgePlayerEventBridge
         PlayerLeftArgs serverEventArgs = new PlayerLeftArgs(event.player.getGameProfile().getId());
         
         for(ForgePlayer i : getForgePlayerObjects(event.player.getGameProfile().getId()))
-            toRaise.put(i.disconnected, new DisconnectedArgs());
+            toRaise.put(i.disconnected, new DisconnectedArgs(event.player.getGameProfile().getId()));
         
         try
         { CompatabilityAccess.getServer().playerLeft.raiseAlongside(this, serverEventArgs, toRaise); }
@@ -86,7 +86,7 @@ public class ForgePlayerEventBridge
         Map<Event<DiedArgs>, DiedArgs> toRaise = new HashMap<Event<DiedArgs>, DiedArgs>();
         
         for(ForgePlayer i : getForgePlayerObjects(((EntityPlayer)event.entity).getGameProfile().getId()))
-            toRaise.put(i.died, new DiedArgs());
+            toRaise.put(i.died, new DiedArgs(((EntityPlayer)event.entity).getGameProfile().getId()));
         
         try
         { EventMethods.raiseMultiple(this, toRaise); }

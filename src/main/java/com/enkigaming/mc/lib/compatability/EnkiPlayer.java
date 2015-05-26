@@ -9,14 +9,37 @@ import java.util.UUID;
 
 public abstract class EnkiPlayer
 {
-    public static class DiedArgs extends StandardEventArgs
-    { /* Nothing atm */ }
+    public static class PlayerArgs extends StandardEventArgs
+    {
+        public PlayerArgs(UUID playerId)
+        { this.playerId = playerId; }
+        
+        protected UUID playerId;
+        
+        public UUID getPlayerId()
+        { return playerId; }
+        
+        public EnkiPlayer getPlayer()
+        { return EnkiServer.getInstance().getPlayer(playerId); }
+    }
     
-    public static class ConnectedArgs extends StandardEventArgs
-    { /* Nothing atm */ }
+    public static class DiedArgs extends PlayerArgs
+    {
+        public DiedArgs(UUID playerId)
+        { super(playerId); }
+    }
     
-    public static class DisconnectedArgs extends StandardEventArgs
-    { /* Nothing atm */ }
+    public static class ConnectedArgs extends PlayerArgs
+    {
+        public ConnectedArgs(UUID playerId)
+        { super(playerId); }
+    }
+    
+    public static class DisconnectedArgs extends PlayerArgs
+    {
+        public DisconnectedArgs(UUID playerId)
+        { super(playerId); }
+    }
     
     public final Event<DiedArgs> died = new StandardEvent<DiedArgs>();
     

@@ -6,6 +6,8 @@ import com.enkigaming.lib.events.StandardEvent;
 import com.enkigaming.lib.events.StandardEventArgs;
 import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer;
+import com.enkigaming.mc.lib.compatability.EnkiPlayer.DiedArgs;
+import com.enkigaming.mc.lib.compatability.EnkiServer;
 import com.enkigaming.mc.lib.misc.PlayerPosition;
 import com.enkigaming.mc.lib.misc.TickCountdownTimer;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.commons.lang3.NotImplementedException;
 
 public abstract class PvpGame
 {
@@ -335,21 +338,37 @@ public abstract class PvpGame
         /* return gameTimer listeners here */
     }
     
-    final Map<UUID, PlayerGameState> players;
-    Collection<PvpTeam> teams;
-    PlayerPosition lobbySpawn;
-    GameStates possibleGameStates;
-    GameState gameState;
-    TickCountdownTimer lobbyTimer, gameTimer;
-    int minNumberOfTeams;
+    final protected Map<UUID, PlayerGameState> players;
+    protected Collection<PvpTeam> teams;
+    protected PlayerPosition lobbySpawn;
+    protected GameStates possibleGameStates;
+    protected GameState gameState;
+    protected TickCountdownTimer lobbyTimer, gameTimer;
+    protected int minNumberOfTeams;
     
-    final Object lobbySpawnBusy = new Object();
-    final Object teamsBusy = new Object();
+    protected final Object lobbySpawnBusy = new Object();
+    protected final Object teamsBusy = new Object();
     
     public final Event<PlayerJoinedArgs> playerJoined = new StandardEvent<PlayerJoinedArgs>();
     public final Event<PlayerLeftArgs>   playerLeft   = new StandardEvent<PlayerLeftArgs>();
     public final Event<GameStartedArgs>  gameStarted  = new StandardEvent<GameStartedArgs>();
     public final Event<GameFinishedArgs> gameFinished = new StandardEvent<GameFinishedArgs>();
+    
+    protected final EventListener<DiedArgs> playerDiedListener = new EventListener<DiedArgs>()
+    {
+        @Override
+        public void onEvent(Object sender, DiedArgs args)
+        {
+            synchronized(players)
+            {
+                if(players.put(args.getPlayerId(), PlayerGameState.inLobby) == PlayerGameState.inGame)
+                {
+                    teleportPlayerToLobby(args.getPlayerId());
+                    declareRemainingTeamWinnerIfOnlyOneLeft();
+                }
+            }
+        }
+    };
     
     public void teleportPlayersToLobby()
     {
@@ -425,6 +444,8 @@ public abstract class PvpGame
                 { players.put(playerId, PlayerGameState.inLobby); }
                 if(args.getTeleportDestination() != null)
                     CompatabilityAccess.getPlayer(playerId).teleportTo(args.getTeleportDestination());
+                
+                EnkiServer.getInstance().getPlayer(playerId).died.register(playerDiedListener);
             }
             else
                 added = false;
@@ -452,6 +473,8 @@ public abstract class PvpGame
                 
                 if(args.getTeleportDestination() != null)
                     args.getPlayer().teleportTo(args.getTeleportDestination());
+                
+                EnkiServer.getInstance().getPlayer(playerId).died.deregister(playerDiedListener);
             }
         }
         finally
