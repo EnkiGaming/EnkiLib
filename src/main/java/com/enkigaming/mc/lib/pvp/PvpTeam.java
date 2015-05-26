@@ -1,23 +1,38 @@
 package com.enkigaming.mc.lib.pvp;
 
+import com.enkigaming.mc.lib.compatability.EnkiPlayer;
+import com.enkigaming.mc.lib.compatability.EnkiServer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.UUID;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class PvpTeam
 {
     public PvpTeam(UUID... players)
+    { this.players = new HashSet<UUID>(Arrays.asList(players)); }
+    
+    public PvpTeam(Collection<? extends UUID> players)
+    { this.players = new HashSet<UUID>(players); }
+    
+    public PvpTeam(String name, UUID... players)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        this.name = name;
+        this.players = new HashSet<UUID>(Arrays.asList(players));
     }
     
-    public PvpTeam(Collection<UUID> players)
+    public PvpTeam(String name, Collection<? extends UUID> players)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        this.name = name;
+        this.players = new HashSet<UUID>(players);
     }
     
-    String name;
-    Collection<UUID> players;
+    protected String name = null;
+    final protected Collection<UUID> players;
+    
+    final protected Object nameBusy = new Object();
     
     /**
      * Gets the players currently in the team.
@@ -25,25 +40,30 @@ public class PvpTeam
      */
     public Collection<UUID> getPlayers()
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        { return new ArrayList<UUID>(players); }
     }
     
     /**
      * Adds a player to the team.
+     * @param playerId The player ID of the player to add to the team.
      * @return True if the player was added. Otherwise false. (If the player was already in the team)
      */
-    public boolean addPlayer()
+    public boolean addPlayer(UUID playerId)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        { return players.add(playerId); }
     }
     
     /**
      * Removes a player from the team.
+     * @param playerId The player ID of the player to remove from the team.
      * @return True if the player was removed. Otherwise false. (If the player wasn't in the team.)
      */
-    public boolean removePlayer()
+    public boolean removePlayer(UUID playerId)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        { return players.remove(playerId); }
     }
     
     /**
@@ -53,7 +73,8 @@ public class PvpTeam
      */
     public boolean containsPlayer(UUID playerId)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        { return players.contains(playerId); }
     }
     
     /**
@@ -63,7 +84,14 @@ public class PvpTeam
      */
     public boolean containsAllPlayers(UUID... playerIds)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        {
+            for(UUID i : playerIds)
+                if(!players.contains(i))
+                    return false;
+            
+            return true;
+        }
     }
     
     /**
@@ -73,7 +101,14 @@ public class PvpTeam
      */
     public boolean containsAllPlayers(Collection<? extends UUID> playerIds)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        {
+            for(UUID i : playerIds)
+                if(!players.contains(i))
+                    return false;
+            
+            return true;
+        }
     }
     
     /**
@@ -83,7 +118,14 @@ public class PvpTeam
      */
     public boolean containsAnyPlayers(UUID... playerIds)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        {
+            for(UUID i : playerIds)
+                if(players.contains(i))
+                    return true;
+            
+            return false;
+        }
     }
     
     /**
@@ -93,7 +135,14 @@ public class PvpTeam
      */
     public boolean containsAnyPlayers(Collection<? extends UUID> playerIds)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        synchronized(players)
+        {
+            for(UUID i : playerIds)
+                if(players.contains(i))
+                    return true;
+            
+            return false;
+        }
     }
     
     /**
@@ -121,6 +170,14 @@ public class PvpTeam
      */
     public void messagePlayers(String message)
     {
-        throw new NotImplementedException("Not implemented yet.");
+        EnkiServer server = EnkiServer.getInstance();
+        
+        for(UUID i : getPlayers())
+        {
+            EnkiPlayer player = server.getPlayer(i);
+            
+            if(player != null)
+                player.print(message);
+        }
     }
 }
