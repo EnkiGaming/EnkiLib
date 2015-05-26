@@ -7,23 +7,18 @@ import java.util.UUID;
 public class CompatabilityAccess
 {
     public static interface Getter
-    {
-        EnkiPlayer getPlayer(UUID playerId);
-        EnkiBlock getBlock(int worldId, int x, int y, int z);
-        EnkiWorld getWorld(int worldId);
-        EnkiServer getServer();
-    }
+    { EnkiServer getServer(); }
     
     static Getter getter;
     
     public static EnkiPlayer getPlayer(UUID playerId)
-    { return getter.getPlayer(playerId); }
+    { return getServer().getPlayer(playerId); }
     
     public static EnkiBlock getBlock(int worldId, int x, int y, int z)
-    { return getter.getBlock(worldId, x, y, z); }
+    { return getServer().getWorld(worldId).getBlockAt(x, y, z); }
     
     public static EnkiWorld getWorld(int worldId)
-    { return getter.getWorld(worldId); }
+    { return getServer().getWorld(worldId); }
     
     public static EnkiServer getServer()
     { return getter.getServer(); }

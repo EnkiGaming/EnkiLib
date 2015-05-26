@@ -4,25 +4,16 @@ import com.enkigaming.mcforge.lib.eventlisteners.PlayerLogInForCachingEventListe
 import com.enkigaming.mcforge.lib.eventlisteners.WorldSaveEventListener;
 import com.enkigaming.lib.filehandling.FileHandlerRegistry;
 import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
-import com.enkigaming.mc.lib.compatability.EnkiBlock;
-import com.enkigaming.mc.lib.compatability.EnkiPlayer;
 import com.enkigaming.mc.lib.compatability.EnkiServer;
-import com.enkigaming.mc.lib.compatability.EnkiWorld;
-import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
-import com.enkigaming.mcforge.lib.compatability.ForgeBlock;
-import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
 import com.enkigaming.mcforge.lib.compatability.ForgeServer;
-import com.enkigaming.mcforge.lib.compatability.ForgeWorld;
 import com.enkigaming.mcforge.lib.eventlisteners.SecondPassedEventListener;
 import com.enkigaming.mcforge.lib.eventlisteners.compatability.ForgePlayerEventBridge;
 import com.enkigaming.mcforge.lib.registry.UsernameCache;
-import com.google.common.collect.MapMaker;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import java.io.File;
-import java.util.Map;
 import java.util.UUID;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -83,55 +74,6 @@ public class EnkiLib
         CompatabilityAccess.setGetter(new CompatabilityAccess.Getter()
         {
             EnkiServer server = new ForgeServer();
-            
-            // Ensures that all objects returned using the same arguments will be the same objects, for getPlayer,
-            // getBlock, and getWorld
-            Map<UUID,            ForgePlayer> players = new MapMaker().weakValues().makeMap();
-            Map<BlockCoOrdinate, ForgeBlock>  blocks  = new MapMaker().weakValues().makeMap();
-            Map<Integer,         ForgeWorld>  worlds  = new MapMaker().weakValues().makeMap();
-            
-            @Override
-            public EnkiPlayer getPlayer(UUID playerId)
-            {
-                ForgePlayer player = players.get(playerId);
-                
-                if(player == null)
-                {
-                    player = new ForgePlayer(playerId);
-                    players.put(playerId, player);
-                }
-                
-                return player;
-            }
-
-            @Override
-            public EnkiBlock getBlock(int worldId, int x, int y, int z)
-            {
-                BlockCoOrdinate blockCoOrd = new BlockCoOrdinate(worldId, x, y, z);
-                ForgeBlock block = blocks.get(blockCoOrd);
-                
-                if(block == null)
-                {
-                    block = new ForgeBlock(blockCoOrd);
-                    blocks.put(blockCoOrd, block);
-                }
-                
-                return block;
-            }
-
-            @Override
-            public EnkiWorld getWorld(int worldId)
-            {
-                ForgeWorld world = worlds.get(worldId);
-                
-                if(world == null)
-                {
-                    world = new ForgeWorld(worldId);
-                    worlds.put(worldId, world);
-                }
-                
-                return world;
-            }
             
             @Override
             public EnkiServer getServer()
