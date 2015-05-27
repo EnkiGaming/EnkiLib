@@ -1,7 +1,9 @@
 package com.enkigaming.mcforge.lib.compatability;
 
 import com.enkigaming.mc.lib.compatability.EnkiBlock;
+import com.enkigaming.mc.lib.compatability.EnkiBlockMeta;
 import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class ForgeBlock extends EnkiBlock
 {
@@ -19,4 +21,8 @@ public class ForgeBlock extends EnkiBlock
     
     public ForgeBlock(BlockCoOrdinate blockCoOrd)
     { super(blockCoOrd); }
+
+    @Override
+    protected EnkiBlockMeta getNewMeta()
+    { throw new NotImplementedException("Not implemented yet."); }
 }

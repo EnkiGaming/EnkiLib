@@ -18,4 +18,16 @@ public abstract class EnkiBlock extends BlockCoOrdinate
     
     public EnkiBlock(BlockCoOrdinate blockCoOrd)
     { super(blockCoOrd.getWorldId(), blockCoOrd.getX(), blockCoOrd.getY(), blockCoOrd.getZ()); }
+    
+    EnkiBlockMeta meta = null;
+    
+    public EnkiBlockMeta getMeta()
+    {
+        if(meta == null)
+            meta = getNewMeta();
+        
+        return meta;
+    }
+    
+    protected abstract EnkiBlockMeta getNewMeta();
 }

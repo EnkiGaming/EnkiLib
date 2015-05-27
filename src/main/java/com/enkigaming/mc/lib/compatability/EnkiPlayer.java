@@ -7,7 +7,7 @@ import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
 import com.enkigaming.mc.lib.misc.PlayerPosition;
 import java.util.UUID;
 
-public abstract class EnkiPlayer
+public abstract class EnkiPlayer implements CommandSender
 {
     public static class PlayerArgs extends StandardEventArgs
     {
