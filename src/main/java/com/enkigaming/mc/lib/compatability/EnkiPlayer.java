@@ -58,7 +58,7 @@ public abstract class EnkiPlayer implements CommandSender
     public abstract Integer getWorldId();
     
     public EnkiWorld getWorld()
-    { return CompatabilityAccess.getWorld(getWorldId()); }
+    { return EnkiServer.getInstance().getWorld(getWorldId()); }
     
     public abstract void teleportTo(int worldId, double x, double y, double z, double yaw, double pitch);
     

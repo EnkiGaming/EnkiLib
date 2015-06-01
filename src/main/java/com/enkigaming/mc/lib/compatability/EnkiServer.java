@@ -22,7 +22,7 @@ public abstract class EnkiServer implements CommandSender
         { return playerId; }
         
         public EnkiPlayer getPlayer()
-        { return CompatabilityAccess.getPlayer(playerId); }
+        { return EnkiServer.getInstance().getPlayer(playerId); }
     }
     
     public static class PlayerJoinedArgs extends PlayerConnectionArgs

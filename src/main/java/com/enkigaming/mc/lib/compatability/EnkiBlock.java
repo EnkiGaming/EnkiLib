@@ -1,5 +1,6 @@
 package com.enkigaming.mc.lib.compatability;
 
+import com.enkigaming.mc.lib.compatability.items.EnkiBlockMeta;
 import com.enkigaming.mc.lib.misc.BlockCoOrdinate;
 
 public abstract class EnkiBlock extends BlockCoOrdinate
@@ -29,5 +30,10 @@ public abstract class EnkiBlock extends BlockCoOrdinate
         return meta;
     }
     
+    public void invalidateMeta()
+    { meta = null; }
+    
     protected abstract EnkiBlockMeta getNewMeta();
+    
+    public abstract Object getPlatformSpecificInstance();
 }

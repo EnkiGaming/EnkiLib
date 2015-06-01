@@ -2,10 +2,10 @@ package com.enkigaming.mcforge.lib.eventlisteners.compatability;
 
 import com.enkigaming.lib.events.Event;
 import com.enkigaming.lib.events.EventMethods;
-import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer.ConnectedArgs;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer.DiedArgs;
 import com.enkigaming.mc.lib.compatability.EnkiPlayer.DisconnectedArgs;
+import com.enkigaming.mc.lib.compatability.EnkiServer;
 import com.enkigaming.mc.lib.compatability.EnkiServer.PlayerJoinedArgs;
 import com.enkigaming.mc.lib.compatability.EnkiServer.PlayerLeftArgs;
 import com.enkigaming.mcforge.lib.compatability.ForgePlayer;
@@ -57,9 +57,9 @@ public class ForgePlayerEventBridge
             toRaise.put(i.connected, new ConnectedArgs(event.player.getGameProfile().getId()));
         
         try
-        { CompatabilityAccess.getServer().playerJoined.raiseAlongside(this, serverEventArgs, toRaise); }
+        { EnkiServer.getInstance().playerJoined.raiseAlongside(this, serverEventArgs, toRaise); }
         finally
-        { CompatabilityAccess.getServer().playerJoined.raisePostEventAlongside(this, serverEventArgs, toRaise); }
+        { EnkiServer.getInstance().playerJoined.raisePostEventAlongside(this, serverEventArgs, toRaise); }
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -72,9 +72,9 @@ public class ForgePlayerEventBridge
             toRaise.put(i.disconnected, new DisconnectedArgs(event.player.getGameProfile().getId()));
         
         try
-        { CompatabilityAccess.getServer().playerLeft.raiseAlongside(this, serverEventArgs, toRaise); }
+        { EnkiServer.getInstance().playerLeft.raiseAlongside(this, serverEventArgs, toRaise); }
         finally
-        { CompatabilityAccess.getServer().playerLeft.raisePostEventAlongside(this, serverEventArgs, toRaise); }
+        { EnkiServer.getInstance().playerLeft.raisePostEventAlongside(this, serverEventArgs, toRaise); }
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)

@@ -3,7 +3,7 @@ package com.enkigaming.mcforge.lib.eventlisteners.compatability;
 import com.enkigaming.mc.lib.compatability.CommandSender;
 import com.enkigaming.mc.lib.compatability.EnkiServer;
 import com.enkigaming.mc.lib.compatability.EnkiServer.CommandArgs;
-import com.enkigaming.mc.lib.compatability.items.ItemMetaCommandBlock;
+import com.enkigaming.mc.lib.compatability.items.EnkiItemMetaCommandBlock;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class ForgeServerEventBridge
             int x = xyz.posX;
             int y = xyz.posY;
             int z = xyz.posZ;
-            sender = (ItemMetaCommandBlock)server.getWorld(worldId).getBlockAt(x, y, z).getMeta();
+            sender = (EnkiItemMetaCommandBlock)server.getWorld(worldId).getBlockAt(x, y, z).getMeta();
         }
         else if(event.sender instanceof MinecraftServer)
             sender = server;

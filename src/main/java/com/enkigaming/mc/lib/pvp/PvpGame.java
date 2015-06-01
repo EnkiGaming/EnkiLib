@@ -103,7 +103,7 @@ public abstract class PvpGame
         { return playerId; }
         
         public EnkiPlayer getPlayer()
-        { return CompatabilityAccess.getPlayer(playerId); }
+        { return EnkiServer.getInstance().getPlayer(playerId); }
         
         public PlayerPosition getTeleportDestination()
         { return destination; }
@@ -138,7 +138,7 @@ public abstract class PvpGame
         { return playerId; }
         
         public EnkiPlayer getPlayer()
-        { return CompatabilityAccess.getPlayer(playerId); }
+        { return EnkiServer.getInstance().getPlayer(playerId); }
         
         public PlayerPosition getTeleportDestination()
         { return destination; }
@@ -184,7 +184,7 @@ public abstract class PvpGame
             HashSet<EnkiPlayer> players = new HashSet<EnkiPlayer>();
             
             for(UUID id : playersPlaying)
-                players.add(CompatabilityAccess.getPlayer(id));
+                players.add(EnkiServer.getInstance().getPlayer(id));
             
             return players;
         }
@@ -388,7 +388,7 @@ public abstract class PvpGame
         { playerIds = new ArrayList<UUID>(players.keySet()); }
         
         for(UUID playerId : playerIds)
-            CompatabilityAccess.getPlayer(playerId).teleportTo(destination);
+            EnkiServer.getInstance().getPlayer(playerId).teleportTo(destination);
     }
     
     public void teleportPlayerToLobby(UUID playerId)
@@ -404,7 +404,7 @@ public abstract class PvpGame
             return;
         }
         
-        CompatabilityAccess.getPlayer(playerId).teleportTo(destination);
+        EnkiServer.getInstance().getPlayer(playerId).teleportTo(destination);
     }
     
     public void teleportPlayersTo(PlayerPosition destination)
@@ -415,7 +415,7 @@ public abstract class PvpGame
         { playerIds = new ArrayList<UUID>(players.keySet()); }
         
         for(UUID playerId : playerIds)
-            CompatabilityAccess.getPlayer(playerId).teleportTo(destination);
+            EnkiServer.getInstance().getPlayer(playerId).teleportTo(destination);
     }
     
     public GameStates getPossibleGameStates()
@@ -443,7 +443,7 @@ public abstract class PvpGame
                 synchronized(players)
                 { players.put(playerId, PlayerGameState.inLobby); }
                 if(args.getTeleportDestination() != null)
-                    CompatabilityAccess.getPlayer(playerId).teleportTo(args.getTeleportDestination());
+                    EnkiServer.getInstance().getPlayer(playerId).teleportTo(args.getTeleportDestination());
                 
                 EnkiServer.getInstance().getPlayer(playerId).died.register(playerDiedListener);
             }
@@ -560,7 +560,7 @@ public abstract class PvpGame
         synchronized(players)
         {
             for(UUID playerId : players.keySet())
-                CompatabilityAccess.getPlayer(playerId).print(message);
+                EnkiServer.getInstance().getPlayer(playerId).print(message);
         }
     }
     
@@ -570,7 +570,7 @@ public abstract class PvpGame
         {
             for(Entry<UUID, PlayerGameState> player : players.entrySet())
                 if(player.getValue() == PlayerGameState.inGame)
-                    CompatabilityAccess.getPlayer(player.getKey()).print(message);
+                    EnkiServer.getInstance().getPlayer(player.getKey()).print(message);
         }
     }
     
@@ -580,7 +580,7 @@ public abstract class PvpGame
         {
             for(Entry<UUID, PlayerGameState> player : players.entrySet())
                 if(player.getValue() == PlayerGameState.inLobby)
-                    CompatabilityAccess.getPlayer(player.getKey()).print(message);
+                    EnkiServer.getInstance().getPlayer(player.getKey()).print(message);
         }
     }
     
@@ -669,7 +669,7 @@ public abstract class PvpGame
         for(int i = 0; i < remainingPlayers.size(); i++)
         {
             UUID playerId = remainingPlayers.get(i);
-            EnkiPlayer player = CompatabilityAccess.getPlayer(playerId);
+            EnkiPlayer player = EnkiServer.getInstance().getPlayer(playerId);
             
             if(i == remainingPlayers.size() - 1)
                 finishedMessageBuilder.append("and ");

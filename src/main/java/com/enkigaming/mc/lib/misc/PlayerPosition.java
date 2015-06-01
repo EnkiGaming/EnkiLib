@@ -4,6 +4,7 @@ import com.enkigaming.lib.misc.coordinates.Point3d;
 import com.enkigaming.lib.misc.coordinates.XYZCoOrdSet;
 import com.enkigaming.lib.misc.coordinates.XYZPoint;
 import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
+import com.enkigaming.mc.lib.compatability.EnkiServer;
 import com.enkigaming.mc.lib.compatability.EnkiWorld;
 
 public class PlayerPosition extends Point3d
@@ -137,7 +138,7 @@ public class PlayerPosition extends Point3d
     { return worldId; }
     
     public EnkiWorld getWorld()
-    { return CompatabilityAccess.getWorld(worldId); }
+    { return EnkiServer.getInstance().getWorld(worldId); }
     
     public boolean directionWasSpecified()
     { return !noDirection; }
