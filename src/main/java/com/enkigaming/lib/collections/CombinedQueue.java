@@ -13,7 +13,8 @@ import java.util.Queue;
 
 /**
  * Queue that draws values from other contained queues. Naturally, immutable as far as values is concerned, as it
- * doesn't hold actual values, just queues to draw values from. Determines the next value using a Lambda.
+ * doesn't hold actual values, just queues to draw values from. Determines the next value using a Transformer. (single-
+ * -method interface)
  * @author Hanii Puppy <hanii.puppy@googlemail.com>
  * @param <T> The type of object to be drawn from the queue.
  */
@@ -217,6 +218,10 @@ public class CombinedQueue<T> implements Queue<T>
         { return new ArrayList<Queue<? extends T>>(memberQueues); }
     }
     
+    /**
+     * Gets the combined size of all queues referenced by this combined queue.
+     * @return The combined size of all referenced queues.
+     */
     @Override
     public int size()
     {
@@ -231,6 +236,10 @@ public class CombinedQueue<T> implements Queue<T>
         return currentSize;
     }
     
+    /**
+     * Gets whether or not all of the queues referenced by this combined queue are empty.
+     * @return Whether or not all referenced queues are empty.
+     */
     @Override
     public boolean isEmpty()
     {
@@ -248,6 +257,11 @@ public class CombinedQueue<T> implements Queue<T>
         return empty;
     }
     
+    /**
+     * Gets whether or not the passed object is contained within any of the queues referenced by this combined queue.
+     * @param o The object to check for the presence of.
+     * @return Whether or not the passed object is held by any of the referenced queues.
+     */
     @Override
     public boolean contains(Object o)
     {
@@ -262,6 +276,12 @@ public class CombinedQueue<T> implements Queue<T>
         return false;
     }
     
+    /**
+     * Gets whether or not all of the passed objects (all of the objects within the passed collection) are contained
+     * within the queues referenced by this combined queue as a whole.
+     * @param clctn A collection containing all of the objects to check for the presence of.
+     * @return Whether or not all of the passed objects are held within the referenced queues.
+     */
     @Override
     public boolean containsAll(Collection<?> clctn)
     { return toFlatCollection().containsAll(clctn); }
@@ -426,6 +446,20 @@ public class CombinedQueue<T> implements Queue<T>
     {
         synchronized(memberQueues)
         { return memberQueues.removeAll(Arrays.asList(queues)); }
+    }
+    
+    /**
+     * Removes all queues referenced by this combined queue, such that there are no longer any queues referenced by it.
+     * @return True if the queue was modified as a result of this call. Otherwise, false.
+     */
+    public boolean removeAllQueues()
+    {
+        synchronized(memberQueues)
+        {
+            boolean modified = !memberQueues.isEmpty();
+            memberQueues.clear();
+            return modified;
+        }
     }
     
     /**

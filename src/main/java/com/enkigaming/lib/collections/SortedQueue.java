@@ -26,7 +26,6 @@ public class SortedQueue<T> implements Queue<T>
     public SortedQueue(Transformer<T, Comparable> keyGetter)
     {
         members = new ArrayList<T>();
-        //this.keyGetter = keyGetter;
         membersHandler = new SortedListHandler<T>(keyGetter);
     }
     
@@ -45,7 +44,6 @@ public class SortedQueue<T> implements Queue<T>
      */
     public SortedQueue(Transformer<T, Comparable> keyGetter, Collection<? extends T> members)
     {
-        //this.keyGetter = keyGetter;
         membersHandler = new SortedListHandler<T>(keyGetter);
         this.members = membersHandler.quickSort(new ArrayList<T>(members));
     }
@@ -77,11 +75,6 @@ public class SortedQueue<T> implements Queue<T>
      * The handler used for sorting/searching the members list.
      */
     final SortedListHandler<T> membersHandler;
-    
-    /**
-     * The lambda object used for extracting the key by this the queue is sorted from the individual members.
-     */
-    //final Transformer<T, Comparable> keyGetter;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Methods">
