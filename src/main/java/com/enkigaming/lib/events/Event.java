@@ -129,6 +129,7 @@ public interface Event<T extends EventArgs>
      */
     public void raisePostEvent(Object sender, T args);
     
+    //<editor-fold defaultstate="collapsed" desc="Raise Alongside">
     /**
      * Raises multiple other events while at the same time raising this one. All events are raised together, alongside
      * all dependent events, and event listener priorities are respected.
@@ -252,7 +253,9 @@ public interface Event<T extends EventArgs>
      * @param otherEvents The events to raise alongside this one (as the keys) and the args to pass to them. (as values)
      */
     public void raiseAlongside(Object sender, T args, boolean shareCancellation, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents);
+//</editor-fold>
     
+    //<editor-fold defaultstate="collapsed" desc="Raise Post-event Alongside">
     /**
      * Raises multiple other events post-event while at the same time raising this one. All events are raised together,
      * alongside all dependent events, and event listener priorities are respected.
@@ -304,94 +307,332 @@ public interface Event<T extends EventArgs>
      * @param otherEvents The events to raise alongside this one (as the keys) and the args to pass to them. (as values)
      */
     public void raisePostEventAlongside(Object sender, T args, Map<? extends Event<? extends EventArgs>, ? extends EventArgs> otherEvents);
+//</editor-fold>
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="Mutators">
+    //<editor-fold defaultstate="collapsed" desc="Listener Registration">
     /**
-     * Register an event listener to this event, such that its onEvent method will be called when this event is raised
+     * Registers an event listener to this event, such that its onEvent method will be called when this event is raised
      * through any of the available raise methods, passing in the object that raised the event as the sender, and an
      * EventArgs object containing relevant information pertaining to the event raise.
      * @param listener The listener to register.
      */
     public void register(EventListener<T> listener);
     
+    /**
+     * Registers an array of event listeners to this event, such that their onEvent methods will be called when this
+     * event is raised through any of the available raise methods, passing in the object that raise the event as the
+     * sender, and an EventArgs object containing relevant information pertaining to the event raise.
+     * @param listeners The listeners to register.
+     */
     public void register(EventListener<T>... listeners);
     
+    /**
+     * Registers a collection of event listeners to this event, such that their onEvent methods will be called when this
+     * event is raised through any of the available raise methods, passing in the object that raises the event as the
+     * sender, and an EventArgs object containing relevant information pertaining to the event raise.
+     * @param listeners The listeners to register.
+     */
     public void register(Collection<EventListener<T>> listeners);
     
+    /**
+     * Registers an event listener to this event with the specified listener priority (as defined in the
+     * ListenerPriority enum), such that its onEvent method will be called when this event is raised through any of the
+     * available raise methods, passing in the object that raised the event as the sender, and an EventArgs object
+     * containing relevant information pertaining to the event raise.
+     * @param listener The listener to register.
+     * @param priority The priority at which to register the listener, where lower is earlier and higher is later, as
+     * defined in the ListenerPriority enum.
+     */
     public void register(EventListener<T> listener, double priority);
     
+    /**
+     * Registers an event listener to this event with the specified listener priority, such that its onEvent method will
+     * be called when this event is raised through any of the available raise methods, passing in the object that raised
+     * the event as the sender, and an EventArgs object containing relevant information pertaining to the event raise.
+     * @param listener The listener to register.
+     * @param priority The priority at which to register the listener.
+     */
     public void register(EventListener<T> listener, ListenerPriority priority);
     
+    /**
+     * Registers an array of event listeners to this event with this specified listener priority (as defined in the
+     * ListenerPriority enum), such that their onEvent methods will be called when this event is raised through any of
+     * the available raise methods, passing in the object that raised the event as the sender, and an EventArgs object
+     * containing the relevant information pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners, where lower is earlier and higher is later, as
+     * defined in the ListenerPriority enum.
+     */
     public void register(EventListener<T>[] listeners, double priority);
     
+    /**
+     * Registers an array of event listeners to this event with this specified listener priority, such that their
+     * onEvent methods will be called when this event is raised through any of the available raise methods, passing in
+     * the object that raised the event as the sender, and an EventArgs object containing the relevant information
+     * pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners.
+     */
     public void register(EventListener<T>[] listeners, ListenerPriority priority);
     
+    /**
+     * Registers a collection of event listeners to this event with this specified listener priority (as defined in the
+     * ListenerPriority enum), such that their onEvent methods will be called when this event is raised through any of
+     * the available raise methods, passing in the object that raised the event as the sender, and an EventArgs object
+     * containing the relevant information pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners, where lower is earlier and higher is later, as
+     * defined in the ListenerPriority enum.
+     */
     public void register(Collection<EventListener<T>> listeners, double priority);
     
+    /**
+     * Registers a collection of event listeners to this event with this specified listener priority, such that their
+     * onEvent methods will be called when this event is raised through any of the available raise methods, passing in
+     * the object that raised the event as the sender, and an EventArgs object containing the relevant information
+     * pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners.
+     */
     public void register(Collection<EventListener<T>> listeners, ListenerPriority priority);
     
+    /**
+     * Registers an event listener to this event with the specified listener priority (as defined in the
+     * ListenerPriority enum), such that its onEvent method will be called when this event is raised through any of the
+     * available raise methods, passing in the object that raised the event as the sender, and an EventArgs object
+     * containing relevant information pertaining to the event raise.
+     * @param listener The listener to register.
+     * @param priority The priority at which to register the listener, where lower is earlier and higher is later, as
+     * defined in the ListenerPriority enum.
+     */
     public void register(double priority, EventListener<T> listener);
     
+    /**
+     * Registers an event listener to this event with the specified listener priority, such that its onEvent method will
+     * be called when this event is raised through any of the available raise methods, passing in the object that raised
+     * the event as the sender, and an EventArgs object containing relevant information pertaining to the event raise.
+     * @param listener The listener to register.
+     * @param priority The priority at which to register the listener.
+     */
     public void register(ListenerPriority priority, EventListener<T> listener);
     
+    /**
+     * Registers an array of event listeners to this event with this specified listener priority, such that their
+     * onEvent methods will be called when this event is raised through any of the available raise methods, passing in
+     * the object that raised the event as the sender, and an EventArgs object containing the relevant information
+     * pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners, where lower is earlier and higher is later, as
+     * defined in the ListenerPriority enum.
+     */
     public void register(double priority, EventListener<T>... listeners);
     
+    /**
+     * Registers an array of event listeners to this event with this specified listener priority, such that their
+     * onEvent methods will be called when this event is raised through any of the available raise methods, passing in
+     * the object that raised the event as the sender, and an EventArgs object containing the relevant information
+     * pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners.
+     */
     public void register(ListenerPriority priority, EventListener<T>... listeners);
     
+    /**
+     * Registers a collection of event listeners to this event with this specified listener priority (as defined in the
+     * ListenerPriority enum), such that their onEvent methods will be called when this event is raised through any of
+     * the available raise methods, passing in the object that raised the event as the sender, and an EventArgs object
+     * containing the relevant information pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners, where lower is earlier and higher is later, as
+     * defined in the ListenerPriority enum.
+     */
     public void register(double priority, Collection<EventListener<T>> listeners);
     
-    public void register(ListenerPriority priority, Collection<EventListener<T>> listeners);
-    
     /**
-     * Registers an event, alongside a DependentEventArgsGetter to generate the required EventArgs object, as a
-     * dependent event of this one. It will then be raised (calling the onEvent method of all of its registered
-     * listeners) when this is raised, with event listeners being called according to priority alongside (id est not
-     * before or after) the event listeners of this event.
+     * Registers a collection of event listeners to this event with this specified listener priority, such that their
+     * onEvent methods will be called when this event is raised through any of the available raise methods, passing in
+     * the object that raised the event as the sender, and an EventArgs object containing the relevant information
+     * pertaining to the event raise.
+     * @param listeners The listeners to register.
+     * @param priority The priority at which to register the listeners.
+     */
+    public void register(ListenerPriority priority, Collection<EventListener<T>> listeners);
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="Dependent Event Registration">
+    /**
+     * Registers an event, alongside an event args getter to generate the required EventArgs object, as a dependent
+     * event of this one. It will then be raised (calling the onEvent method of all of its registered listeners) when
+     * this is raised, with event listeners being called according to priority alongside (id est not before or after)
+     * the event listeners of this event.
      * @param <TArgs> The type of the EventArgs used by the event being registered.
      * @param event The event being registered.
-     * @param eventArgsGetter The object which, upon calling the getDependentArgs method in it during a raise, will
-     * generate the required EventArgs object using the information from the EventArgs object passed to a raise of this
-     * object.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
      */
     public <TArgs extends EventArgs> void register(Event<TArgs> event, Converger<Object, T, TArgs> eventArgsGetter);
     
+    /**
+     * Registers an event, alongside an event args getter to generate the required EventArgs object, as a dependent
+     * event of this one. It will then be raised (calling the onEvent method of all of its registered listeners) when
+     * this is raised, with event listeners being called according to priority alongside (id est not before or after)
+     * the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param event The event being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter, Event<TArgs> event);
     
+    /**
+     * Registers an array of events, alongside an event args getter to generate the required EventArgs objects, as
+     * dependent events of this one. They will then be raised (calling the onEvent method of all of its registered
+     * listeners) when this is raised, with event listeners being called according to priority alongside (id east not
+     * before or after) the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the events being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs objects using the information from the EventArgs object passed to a raise of this object.
+     * @param events The events being registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Event<? extends TArgs>... events);
     
+    /**
+     * Registers a collection of events, alongside an event args getter to generate the required EventArgs objects, as
+     * dependent events of this one. They will then be raised (calling the onEvent method of all of its registered
+     * listeners) when this is raised, with event listeners being called according to priority alongside (id east not
+     * before or after) the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the events being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs objects using the information from the EventArgs object passed to a raise of this object.
+     * @param events The events being registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Collection<? extends Event<? extends TArgs>> events);
     
+    /**
+     * Registers an event, alongside an event args getter to generate the required EventArgs object, as a dependent
+     * event of this one. It will then be raised (calling the onEvent method of all of its registered listeners) when
+     * this is raised, with event listeners being called according to priority alongside (id est not before or after)
+     * the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param event The event being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     * @param stronglyRegistered Whether or not the event should be strongly registered. If false, the event will be
+     * weakly registered, and will be deregistered from the event when the Java GC decides to collect the event being
+     * registered.
+     */
     public <TArgs extends EventArgs> void register(Event<TArgs> event,
                                                    Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered);
     
+    /**
+     * Registers an event, alongside an event args getter to generate the required EventArgs object, as a dependent
+     * event of this one. It will then be raised (calling the onEvent method of all of its registered listeners) when
+     * this is raised, with event listeners being called according to priority alongside (id est not before or after)
+     * the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param event The event being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     * @param stronglyRegistered Whether or not the event should be strongly registered. If false, the event will be
+     * weakly registered, and will be deregistered from the event when the Java GC decides to collect the event being
+     * registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Event<TArgs> event,
                                                    boolean stronglyRegistered);
     
+    /**
+     * Registers an event, alongside an event args getter to generate the required EventArgs object, as a dependent
+     * event of this one. It will then be raised (calling the onEvent method of all of its registered listeners) when
+     * this is raised, with event listeners being called according to priority alongside (id est not before or after)
+     * the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param event The event being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     * @param stronglyRegistered Whether or not the event should be strongly registered. If false, the event will be
+     * weakly registered, and will be deregistered from the event when the Java GC decides to collect the event being
+     * registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered,
                                                    Event<TArgs> event);
     
+    /**
+     * Registers an array of events, alongside an event args getter to generate the required EventArgs objects, as
+     * dependent events of this one. They will then be raised (calling the onEvent method of all of its registered
+     * listeners) when this is raised, with event listeners being called according to priority alongside (id est not
+     * before or after) the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param events The events being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     * @param stronglyRegistered Whether or not the event should be strongly registered. If false, the event will be
+     * weakly registered, and will be deregistered from the event when the Java GC decides to collect the event being
+     * registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered,
                                                    Event<? extends TArgs>... events);
     
+    /**
+     * Registers a collection of events, alongside an event args getter to generate the required EventArgs objects, as
+     * dependent events of this one. They will then be raised (calling the onEvent method of all of its registered
+     * listeners) when this is raised, with event listeners being called according to priority alongside (id est not
+     * before or after) the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param events The events being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     * @param stronglyRegistered Whether or not the event should be strongly registered. If false, the event will be
+     * weakly registered, and will be deregistered from the event when the Java GC decides to collect the event being
+     * registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    boolean stronglyRegistered,
                                                    Collection<? extends Event<? extends TArgs>> events);
     
+    /**
+     * Registers an array of events, alongside an event args getter to generate the required EventArgs objects, as
+     * dependent events of this one. They will then be raised (calling the onEvent method of all of its registered
+     * listeners) when this is raised, with event listeners being called according to priority alongside (id est not
+     * before or after) the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param events The events being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     * @param stronglyRegistered Whether or not the event should be strongly registered. If false, the event will be
+     * weakly registered, and will be deregistered from the event when the Java GC decides to collect the event being
+     * registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Event<? extends TArgs>[] events,
                                                    boolean stronglyRegistered);
     
+    /**
+     * Registers a collection of events, alongside an event args getter to generate the required EventArgs objects, as
+     * dependent events of this one. They will then be raised (calling the onEvent method of all of its registered
+     * listeners) when this is raised, with event listeners being called according to priority alongside (id est not
+     * before or after) the event listeners of this event.
+     * @param <TArgs> The type of the EventArgs used by the event being registered.
+     * @param events The events being registered.
+     * @param eventArgsGetter The converger which, upon calling the get method in it during a raise, will generate the
+     * required EventArgs object using the information from the EventArgs object passed to a raise of this object.
+     * @param stronglyRegistered Whether or not the event should be strongly registered. If false, the event will be
+     * weakly registered, and will be deregistered from the event when the Java GC decides to collect the event being
+     * registered.
+     */
     public <TArgs extends EventArgs> void register(Converger<Object, T, TArgs> eventArgsGetter,
                                                    Collection<? extends Event<? extends TArgs>> events,
                                                    boolean stronglyRegistered);
+    //</editor-fold>
     
+    //<editor-fold defaultstate="collapsed" desc="Listener Deregistration">
     /**
      * Removes an event listener from this event, stopping its onEvent method from being called when this event is
      * raised in any manner, unless it is re-registered.
@@ -400,18 +641,32 @@ public interface Event<T extends EventArgs>
      */
     public EventListener<T> deregister(EventListener<T> listener);
     
+    /**
+     * Removes an array of event listeners from this event, stopping their onEvent methods from being called when this
+     * event is raised in any manner, unless they're re-registered.
+     * @param listeners The event listener objects to deregister.
+     * @return The listeners deregistered as a result of this method call, in a collection.
+     */
     public Collection<EventListener<T>> deregister(EventListener<T>... listeners);
+    //</editor-fold>
     
+    //<editor-fold defaultstate="collapsed" desc="Dependent Event Deregistration">
     /**
      * Removes an event from this event as a dependant, stopping it from being raised alongside this one. (Except,
      * obviously, when manually raised alongside)
      * @param event The event to deregister.
-     * @return True if an event was successfully deregistered from the event, false if it wasn't. (Such as because the
-     * event wasn't registered as a dependant in order to be deregistered)
+     * @return The event deregistered as a result of this method call, or null if no event was deregistered.
      */
     public Event<? extends EventArgs> deregister(Event<? extends EventArgs> event);
     
-    public Collection<Event<? extends EventArgs>> deregister(Event<? extends EventArgs>... event);
+    /**
+     * Removes an array of events from this event's dependants, stopping them from being raised alongside this one
+     * whenever this one is raised. (Except, obviously, when manually raised alongside)
+     * @param events The events to deregister.
+     * @return The events deregistered as a result of this method call, in a collection.
+     */
+    public Collection<Event<? extends EventArgs>> deregister(Event<? extends EventArgs>... events);
+    //</editor-fold>
     
     // No deregistration of collections of event listeners or events, thanks type erasure :<
     //</editor-fold>

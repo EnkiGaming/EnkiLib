@@ -1,7 +1,7 @@
 package com.enkigaming.lib.encapsulatedfunctions;
 
 /**
- * General operation
+ * A general operation, encapsulated in a functional interface.
  * @author Hanii Puppy <hanii.puppy@googlemail.com>
  */
 public interface Operation
