@@ -11,11 +11,12 @@ import java.util.Queue;
  */
 public interface EventArgs
 {
+    //<editor-fold defaultstate="collapsed" desc="Sub-interfaces">
     /**
      * Work-around for standard methods that should only really be available to implementations of the Event interface.
-     * 
+     *
      * Contains methods required for Event implementations to interact with Event Args objects at a technical level.
-     * 
+     *
      * ... This doesn't make me feel comfy. If I weren't using interfaces, these methods would just have a package
      * privacy level.
      */
@@ -26,25 +27,25 @@ public interface EventArgs
          * used as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsingPreEvent();
-    
+        
         /**
          * Marks the event args as having been using in a pre-event raise, and ensure it's in the correct state to be
          * marked as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsedPreEvent();
-
+        
         /**
          * Marks the event args as being used in an in-progress post-event raise, and ensures it's in the correct state to be
          * used as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsingPostEvent();
-
+        
         /**
          * Marks the event args as having been using in a post-event raise, and ensure it's in the correct state to be
          * marked as such. If this event args has a parent args, defers to the same method on the parent args.
          */
         void markAsUsedPostEvent();
-
+        
         /**
          * Specifies the Event object that this EventArgs object is associated with. That is, the Event object that this
          * EventArgs object was passed to in an event raise.
@@ -92,7 +93,7 @@ public interface EventArgs
          * called using this EventArgs object, so they can be referenced in the post-event raise rather than generating
          * a fresh queue of listeners that may result in a different set of listeners being called should listeners be
          * registered or deregistered from the event
-         * @param listenerQueue 
+         * @param listenerQueue
          */
         void setListenerQueue(Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> listenerQueue);
         
@@ -104,21 +105,17 @@ public interface EventArgs
          */
         Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> getListenerQueue();
     }
+    //</editor-fold>
     
+    //<editor-fold defaultstate="collapsed" desc="Methods">
+    //<editor-fold defaultstate="collapsed" desc="Accessors">
     /**
      * Whether or not the event raise this event args object is passed from to the listener is cancelled by event args.
-     * 
+     *
      * Returns isCancelled() called on getMasterArgs() if it returns something, if this isn't a master args.
      * @return True if the event is cancelled, false if it isn't.
      */
     boolean isCancelled(); // If this class has master args, use master args cancellation state.
-    
-    /**
-     * Sets whether or not the event raise will be cancelled.
-     * @param cancellation True if the event should be cancelled, false if it shouldn't be.
-     * @return True if the event was cancelled before calling this method, false if it wasn't.
-     */
-    boolean setCancelled(boolean cancellation);
     
     /**
      * Whether or not the event args object should be able to be modified in any way.
@@ -148,7 +145,7 @@ public interface EventArgs
     Collection<EventArgs> getDependentArgs(boolean getDependantsCascadingly);
     
     /**
-     * Gets the eventargs objects that were generated using this eventargs object. 
+     * Gets the eventargs objects that were generated using this eventargs object.
      * @param includeThis Whether or not to include this object in the returned collection.
      * @param getDependantsCascadingly Whether or not to include objects that were generated from args that were
      * generated from this.
@@ -196,4 +193,15 @@ public interface EventArgs
      * @return The technical accessor object.
      */
     TechnicalAccessor getTechnicalAccessor();
+//</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="Mutators">
+    /**
+     * Sets whether or not the event raise will be cancelled.
+     * @param cancellation True if the event should be cancelled, false if it shouldn't be.
+     * @return True if the event was cancelled before calling this method, false if it wasn't.
+     */
+    boolean setCancelled(boolean cancellation);
+    //</editor-fold>
+    //</editor-fold>
 }
