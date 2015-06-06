@@ -19,23 +19,65 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.WeakHashMap;
 
+/**
+ * The standard implementation of the Event interface.
+ * @author Hanii Puppy <hanii.puppy@googlemail.com>
+ * @param <T> The type of the eventargs object passed to registered listeners.
+ */
 public class StandardEvent<T extends EventArgs> implements Event<T>
 {
+    /**
+     * The strongly-registered event listeners. Each of these will have their onEvent methods called when this event is
+     * raised.
+     */
     protected final Map<EventListener<T>, Double> listeners = new HashMap<EventListener<T>, Double>();
     
+    /**
+     * The weakly-registered event listeners. Each of these will have their onEvent methods called when this event is
+     * raised. When the garbage-collector collects a listener in this map (which the map itself won't stop it from
+     * doing), it will no longer be contained within the map, and thus will no longer have its onEvent methods called
+     * when this event is raised.
+     */
     protected final Map<EventListener<T>, Double> weakListeners = new WeakHashMap<EventListener<T>, Double>();
     
+    /**
+     * The strongly-registered dependent events. Each of these have their listeners' onEvent methods called alongside
+     * the listeners in this event. The EventArgs objects passed to each dependent event is generated using the
+     * converger object stored with the dependent event.
+     */
     protected final Map<Event<?>, Converger<Object, T, ? extends EventArgs>> dependentEvents
         = new HashMap<Event<?>, Converger<Object, T, ? extends EventArgs>>();
     
+    /**
+     * The weakly-registered dependent events. Each of these have their listeners' onEvent methods called alongside the
+     * listeners in this event. The EventArgs objects passed to each dependent event is generated using the converger
+     * object stored with the dependent event. When the garbage collector collects an event in this map (which the map
+     * itself won't stop it from doing), it will no longer be contained within the map, and thus will no longer have its
+     * listeners called alongside this event's listeners when this event is raised.
+     */
     protected final Map<Event<?>, Converger<Object, T, ? extends EventArgs>> weakDependentEvents
         = new WeakHashMap<Event<?>, Converger<Object, T, ? extends EventArgs>>();
     
+    /**
+     * Gets a map containing all of the events weakly registered as dependent events to this one, along with the
+     * convergers used for generating these event args when this event in raised.
+     * @return A map containing the aforementioned events (as the keys) and convergers.
+     */
     protected Map<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>> getWeakDependantsWithGetters()
-    { return new HashMap<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>>(weakDependentEvents); }
+    {
+        synchronized(weakDependentEvents)
+        { return new HashMap<Event<? extends EventArgs>, Converger<Object, T, ? extends EventArgs>>(weakDependentEvents); }
+    }
     
+    /**
+     * Gets a collection containing the events weakly registered as dependent events to this one.
+     * @return A collection containing the aforementioned events.
+     */
     protected Collection<Event<? extends EventArgs>> getWeakDependants()
-    { return new HashSet<Event<? extends EventArgs>>(weakDependentEvents.keySet()); }
+    {
+        synchronized(weakDependentEvents)
+        { return new HashSet<Event<? extends EventArgs>>(weakDependentEvents.keySet()); }
+    }
     
     @Override
     public Collection<Event<? extends EventArgs>> getDependentEvents(boolean includeThis,
@@ -686,6 +728,19 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         return allArgs;
     }
     
+    // 6/6/2015 - I'm reading this back and dismaying at how much of a mess the internal technical methods of this
+    //            class are, while trying to document it. What's daft is that the tidier approach I used in previous
+    //            incarnations of my events system used a tinier internal class signature, which resulted in far
+    //            messier actual method code. Maybe the poor method names just reflect the spaghetti in my head when I
+    //            was working through writing the implementation. I'll probably come back here at some point in the
+    //            future and rewrite the technical methods maybe just to make them seem less ... technical? To put it
+    //            diplomatically? But that probably won't be until I have a reason to go through this thoroughly, like
+    //            when I eventually need to translate my events system into C#. (While this was originally modelled
+    //            after C#'s event system, it's grown past it, and now includes some features, particularly priorities,
+    //            that I'd miss going back to just using standard C# events. Because they're pretty much just delegates
+    //            with bells and whistles, I can't even just make a sub-class of its events that adds some of those
+    //            missing features :< ) But for now, it works, and I have no reason nor need to tamper with it. I'd just
+    //            like to direct you towards this comic strip: 
     protected Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> getThisAndDependentArgsAsQueue(Object sender, T args)
     {
         Collection<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> listenerArgsPairings = new HashSet<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>>();
@@ -702,6 +757,14 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         });
     }
     
+    /**
+     * Gets a collection containing the eventargs objects to be passed to all dependent events during an event raise.
+     * @param event The main event.
+     * @param sender The object that caused the event raise.
+     * @param args The eventargs object being passed into the main event.
+     * @return A collection containing eventargs, which should themselves contain the events they should be passed to
+     * the listeners of.
+     */
     protected static Collection<EventArgs> generateEventAndDependantsArgs(Event<? extends EventArgs> event,
                                                                           Object sender,
                                                                           EventArgs args)
@@ -734,6 +797,17 @@ public class StandardEvent<T extends EventArgs> implements Event<T>
         return allArgs;
     }
     
+    /**
+     * Gets a queue containing all of the dependent events (At the time of calling) along with the eventargs objects to
+     * be passed to them and their priorities, in order of priority, starting with listeners of the priority that should
+     * be first.
+     * @param event The initial event being called, from which to derive dependants.
+     * @param sender The object that caused the event raise.
+     * @param args The eventargs object to be passed to "event"'s own listeners.
+     * @return A queue containing triplets, containing the resulting event-listeners, their priorities, and the
+     * eventargs objects to be passed to them, sorted by their priorities so that the earliest priorities are next in
+     * the queue.
+     */
     protected static Queue<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> getEventAndDependantsArgsAsQueue(Event<?> event, Object sender, EventArgs args)
     {
         Collection<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>> listenerArgsPairings = new HashSet<Triplet<EventListener<? extends EventArgs>, Double, EventArgs>>();
