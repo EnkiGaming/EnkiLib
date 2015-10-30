@@ -4,9 +4,6 @@ import com.enkigaming.lib.misc.coordinates.CoOrdinate3d;
 import com.enkigaming.lib.misc.coordinates.XYCoOrdPair;
 import com.enkigaming.lib.misc.coordinates.XYZCoOrdSet;
 import com.enkigaming.lib.misc.coordinates.XZCoOrdPair;
-import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
-import com.enkigaming.mc.lib.compatability.EnkiServer;
-import com.enkigaming.mc.lib.compatability.EnkiWorld;
 
 public class BlockCoOrdinate extends CoOrdinate3d
 {
@@ -44,9 +41,6 @@ public class BlockCoOrdinate extends CoOrdinate3d
     
     public int getWorldId()
     { return worldId; }
-    
-    public EnkiWorld getWorld()
-    { return EnkiServer.getInstance().getWorld(worldId); }
 
     @Override
     public int hashCode()

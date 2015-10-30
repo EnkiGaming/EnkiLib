@@ -1,13 +1,10 @@
-package com.enkigaming.mc.lib.pvp;
+package com.enkigaming.mcforge.lib.pvp;
 
-import com.enkigaming.mc.lib.compatability.EnkiPlayer;
-import com.enkigaming.mc.lib.compatability.EnkiServer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
-import org.apache.commons.lang3.NotImplementedException;
 
 public class PvpTeam
 {

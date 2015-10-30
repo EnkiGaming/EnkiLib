@@ -1,13 +1,9 @@
-package com.enkigaming.mc.lib.pvp;
+package com.enkigaming.mcforge.lib.pvp;
 
 import com.enkigaming.lib.events.Event;
 import com.enkigaming.lib.events.EventListener;
 import com.enkigaming.lib.events.StandardEvent;
 import com.enkigaming.lib.events.StandardEventArgs;
-import com.enkigaming.mc.lib.compatability.CompatabilityAccess;
-import com.enkigaming.mc.lib.compatability.EnkiPlayer;
-import com.enkigaming.mc.lib.compatability.EnkiPlayer.DiedArgs;
-import com.enkigaming.mc.lib.compatability.EnkiServer;
 import com.enkigaming.mc.lib.misc.PlayerPosition;
 import com.enkigaming.mc.lib.misc.TickCountdownTimer;
 import java.util.ArrayList;
@@ -20,7 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.commons.lang3.NotImplementedException;
 
 public abstract class PvpGame
 {

@@ -1,12 +1,11 @@
 package com.enkigaming.mc.lib.misc;
 
 import com.enkigaming.lib.events.Event;
-import com.enkigaming.lib.events.EventListener;
-import com.enkigaming.lib.events.ListenerPriority;
 import com.enkigaming.lib.events.StandardEvent;
 import com.enkigaming.lib.events.StandardEventArgs;
-import com.enkigaming.mc.lib.compatability.CompatabilityEvents;
-import com.enkigaming.mc.lib.compatability.CompatabilityEvents.SecondTickArgs;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.WeakHashMap;
 
 public class TickCountdownTimer
 {
@@ -44,16 +43,10 @@ public class TickCountdownTimer
     
     final Object secondsLeftBusy = new Object();
     
-    EventListener<SecondTickArgs> secondPassedListener = new EventListener<SecondTickArgs>()
-    {
-        // Once support for Java 7 is dropped, this can be switched for a lambda expression.
-        @Override
-        public void onEvent(Object sender, SecondTickArgs args)
-        { tick(); }
-    };
-    
     public Event<TickedArgs> ticked = new StandardEvent<TickedArgs>();
     public Event<FinishedArgs> finished = new StandardEvent<FinishedArgs>();
+    
+    private static final Collection<TickCountdownTimer> objectsToTick = Collections.newSetFromMap(new WeakHashMap<TickCountdownTimer, Boolean>());
     
     public int setTimeLeft(int seconds)
     {
@@ -72,13 +65,19 @@ public class TickCountdownTimer
     { return setTimeLeft((((hours * 60) + minutes) * 60) + seconds); }
     
     public void start()
-    { CompatabilityEvents.secondPassed.register(ListenerPriority.Monitor, secondPassedListener); }
+    {
+        synchronized(objectsToTick)
+        { objectsToTick.add(this); }
+    }
     
     public void resume()
     { start(); } // purely syntactic, for using alongside pause();
     
     public void pause()
-    { CompatabilityEvents.secondPassed.deregister(secondPassedListener); }
+    {
+        synchronized(objectsToTick)
+        { objectsToTick.remove(this); }
+    }
     
     public void finish()
     {
@@ -91,7 +90,10 @@ public class TickCountdownTimer
             try
             { finished.raisePostEvent(secondsLeftBusy, args); }
             finally
-            { CompatabilityEvents.secondPassed.deregister(secondPassedListener); }
+            {
+                synchronized(objectsToTick)
+                { objectsToTick.remove(this); }
+            }
         }
     }
     
@@ -113,6 +115,15 @@ public class TickCountdownTimer
                 finally
                 { if(numberOfSecondsLeft <= 0) finish(); }
             }
+        }
+    }
+    
+    public static void passSecond()
+    {
+        synchronized(objectsToTick)
+        {
+            for(TickCountdownTimer i : objectsToTick)
+                i.tick();
         }
     }
 }
